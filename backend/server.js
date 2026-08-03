@@ -11,24 +11,34 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ─── CORS ─────────────────────────────────────────────────────────────────────
-// Set ALLOWED_ORIGINS in .env as comma-separated list, e.g.:
-//   ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
-const allowedOrigins = process.env.ALLOWED_ORIGINS
+const defaultAllowed = [
+  'https://tezsend.com',
+  'https://www.tezsend.com',
+  'http://localhost:5173',
+  'http://localhost:3000'
+];
+
+const envAllowed = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim())
-  : ['*'];
+  : [];
+
+const allowedOrigins = [...new Set([...defaultAllowed, ...envAllowed])];
 
 app.use(
   cors({
-    origin: allowedOrigins.includes('*')
-      ? '*'
-      : (origin, callback) => {
-          // allow server-to-server requests (no Origin header)
-          if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-          } else {
-            callback(new Error(`CORS blocked for origin: ${origin}`));
-          }
-        },
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl, server-to-server)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      // Allow any subdomains of tezsend.com
+      if (origin.endsWith('.tezsend.com') || origin === 'https://tezsend.com') {
+        return callback(null, true);
+      }
+      console.warn(`[CORS] Blocked request from origin: ${origin}`);
+      callback(null, false);
+    },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
