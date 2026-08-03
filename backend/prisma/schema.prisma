@@ -1,0 +1,62 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String        @id @default(uuid())
+  phone         String?       @unique
+  email         String        @unique
+  name          String?
+  passwordHash  String?
+  googleId      String?       @unique
+  avatar        String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  cards         Card[]
+  beneficiaries Beneficiary[]
+  transactions  Transaction[]
+}
+
+model Card {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  token     String
+  last4     String
+  network   String
+  createdAt DateTime @default(now())
+}
+
+model Beneficiary {
+  id           String        @id @default(uuid())
+  userId       String
+  user         User          @relation(fields: [userId], references: [id])
+  type         String
+  upiId        String?
+  accountNo    String?
+  ifsc         String?
+  bankName     String?
+  createdAt    DateTime      @default(now())
+  transactions Transaction[]
+}
+
+model Transaction {
+  id             String      @id @default(uuid())
+  userId         String
+  user           User        @relation(fields: [userId], references: [id])
+  beneficiaryId  String
+  beneficiary    Beneficiary @relation(fields: [beneficiaryId], references: [id])
+  amount         Float
+  convenienceFee Float
+  totalAmount    Float
+  status         String
+  airpayOrderId  String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}

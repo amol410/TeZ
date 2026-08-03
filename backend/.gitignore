@@ -1,0 +1,8 @@
+node_modules
+# Keep environment variables out of version control
+
+
+/generated/prisma
+
+# Firebase service account (contains private key - never commit!)
+*-firebase-adminsdk*.json
