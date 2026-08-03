@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import apiClient from '../api/client';
 import { useGoogleLogin } from '@react-oauth/google';
@@ -181,7 +181,7 @@ const Login = () => {
 
           {/* Signup Link */}
           <p className="text-center font-body-md text-body-md text-on-surface-variant">
-            Don't have a corporate account? <a className="text-secondary font-semibold hover:underline" href="#">Register</a>
+            Don't have a corporate account? <Link className="text-secondary font-semibold hover:underline" to="/register">Register</Link>
           </p>
         </div>
 

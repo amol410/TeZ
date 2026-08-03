@@ -4,6 +4,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 // Pages
 import Login from './pages/Login';
+import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import AddBeneficiary from './pages/AddBeneficiary';
 import AddCard from './pages/AddCard';
@@ -16,6 +17,7 @@ function App() {
         <Routes>
           {/* Public Route */}
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
           {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>
