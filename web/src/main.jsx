@@ -6,6 +6,8 @@ import App from './App.jsx'
 
 const GOOGLE_CLIENT_ID = '294998189349-qkqo2pholvm8fdg6qnbl15n8q56edcua.apps.googleusercontent.com';
 
+console.log("TezSend frontend initialized");
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
