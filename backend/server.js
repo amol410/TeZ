@@ -53,7 +53,9 @@ app.get('/health', (req, res) => {
 
 // ─── Serve React frontend (production) ───────────────────────────────────────
 const frontendDist = path.resolve(__dirname, '..', 'web', 'dist');
-if (require('fs').existsSync(frontendDist)) {
+const indexPath = path.join(frontendDist, 'index.html');
+
+if (require('fs').existsSync(indexPath)) {
   // Serve static assets with a long cache time
   app.use(express.static(frontendDist, {
     setHeaders: (res, path) => {
