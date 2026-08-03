@@ -54,10 +54,25 @@ app.get('/health', (req, res) => {
 // ─── Serve React frontend (production) ───────────────────────────────────────
 const frontendDist = path.resolve(__dirname, '..', 'web', 'dist');
 if (require('fs').existsSync(frontendDist)) {
-  app.use(express.static(frontendDist));
-  // SPA fallback — all non-API routes serve index.html
+  // Serve static assets with a long cache time
+  app.use(express.static(frontendDist, {
+    setHeaders: (res, path) => {
+      if (path.endsWith('.html')) {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+      } else {
+        res.setHeader('Cache-Control', 'public, max-age=31536000');
+      }
+    }
+  }));
+
+  // SPA fallback — all non-API routes serve index.html with NO CACHE
   app.use((req, res, next) => {
     if (req.path.startsWith('/api')) return next();
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     res.sendFile(path.join(frontendDist, 'index.html'));
   });
   console.log(`📦 Serving frontend from: ${frontendDist}`);
