@@ -113,17 +113,8 @@ const History = () => {
                   <Link className="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-white/5 active:translate-x-1 transition-all" to="/">
                       <span className="material-symbols-outlined">account_balance</span> Accounts
                   </Link>
-                  <Link className="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-white/5 active:translate-x-1 transition-all" to="/add-card">
-                      <span className="material-symbols-outlined">credit_card</span> Cards
-                  </Link>
                   <Link className="flex items-center gap-3 px-4 py-3 rounded-lg text-secondary font-semibold bg-secondary-container/20 border-r-4 border-secondary active:translate-x-1 transition-all" to="/history">
                       <span className="material-symbols-outlined" style={{fontVariationSettings: "'FILL' 1"}}>history</span> History
-                  </Link>
-                  <Link className="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-white/5 active:translate-x-1 transition-all" to="#">
-                      <span className="material-symbols-outlined">security</span> Security
-                  </Link>
-                  <Link className="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-white/5 active:translate-x-1 transition-all" to="#">
-                      <span className="material-symbols-outlined">settings</span> Settings
                   </Link>
               </div>
           </nav>
@@ -261,14 +252,6 @@ const History = () => {
               <Link className="flex flex-col items-center justify-center text-on-surface-variant opacity-70 hover:opacity-100 transition-opacity" to="/">
                   <span className="material-symbols-outlined">dashboard</span>
                   <span className="font-label-caps text-label-caps mt-1">Dashboard</span>
-              </Link>
-              <Link className="flex flex-col items-center justify-center text-on-surface-variant opacity-70 hover:opacity-100 transition-opacity" to="#">
-                  <span className="material-symbols-outlined">payments</span>
-                  <span className="font-label-caps text-label-caps mt-1">Payments</span>
-              </Link>
-              <Link className="flex flex-col items-center justify-center text-on-surface-variant opacity-70 hover:opacity-100 transition-opacity" to="/send-money">
-                  <span className="material-symbols-outlined">swap_horiz</span>
-                  <span className="font-label-caps text-label-caps mt-1">Transfer</span>
               </Link>
               <Link className="flex flex-col items-center justify-center text-secondary bg-secondary/10 rounded-xl px-3 py-1 scale-105" to="/history">
                   <span className="material-symbols-outlined" style={{fontVariationSettings: "'FILL' 1"}}>history</span>
