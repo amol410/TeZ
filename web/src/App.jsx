@@ -9,6 +9,7 @@ import Dashboard from './pages/Dashboard';
 import AddBeneficiary from './pages/AddBeneficiary';
 import AddCard from './pages/AddCard';
 import SendMoney from './pages/SendMoney';
+import History from './pages/History';
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
             <Route path="/add-beneficiary" element={<AddBeneficiary />} />
             <Route path="/add-card" element={<AddCard />} />
             <Route path="/send-money" element={<SendMoney />} />
+            <Route path="/history" element={<History />} />
           </Route>
 
           {/* Catch-all redirect */}
