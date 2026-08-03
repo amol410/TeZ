@@ -1,4 +1,4 @@
-import { StrictMode } from 'react'
+import React, { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import './index.css'
@@ -6,12 +6,42 @@ import App from './App.jsx'
 
 const GOOGLE_CLIENT_ID = '294998189349-qkqo2pholvm8fdg6qnbl15n8q56edcua.apps.googleusercontent.com';
 
-console.log("TezSend frontend initialized");
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, errorInfo) {
+    console.error("React Error Boundary Caught:", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: '30px', background: '#0f172a', color: '#f43f5e', fontFamily: 'monospace', minHeight: '100vh' }}>
+          <h2>⚠️ React Runtime Error Caught</h2>
+          <p style={{ color: '#94a3b8' }}>An uncaught exception occurred while rendering the React app:</p>
+          <pre style={{ background: '#1e293b', padding: '15px', borderRadius: '8px', color: '#fb7185', overflowX: 'auto' }}>
+            {this.state.error?.toString()}
+          </pre>
+          <pre style={{ background: '#1e293b', padding: '15px', borderRadius: '8px', color: '#cbd5e1', fontSize: '12px', overflowX: 'auto' }}>
+            {this.state.error?.stack}
+          </pre>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-      <App />
-    </GoogleOAuthProvider>
+    <ErrorBoundary>
+      <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+        <App />
+      </GoogleOAuthProvider>
+    </ErrorBoundary>
   </StrictMode>,
 )
