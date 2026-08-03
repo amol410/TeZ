@@ -76,7 +76,11 @@ if (require('fs').existsSync(frontendDist)) {
 // ─── Global error handler ─────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
-  res.status(500).json({ message: 'Internal server error' });
+  res.status(500).json({ 
+    message: 'Internal server error', 
+    error: err.message,
+    stack: err.stack
+  });
 });
 
 // ─── Start server ─────────────────────────────────────────────────────────────
