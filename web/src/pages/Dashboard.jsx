@@ -88,7 +88,8 @@ const Dashboard = () => {
               <Link to="/" className="text-secondary font-bold font-label-caps text-label-caps hover:opacity-80 transition-opacity duration-200">Home</Link>
               <Link to="/send-money" className="text-on-surface-variant font-label-caps text-label-caps hover:opacity-80 transition-opacity duration-200">Pay</Link>
               <Link to="/history" className="text-on-surface-variant font-label-caps text-label-caps hover:opacity-80 transition-opacity duration-200">History</Link>
-              <a href="#" className="text-on-surface-variant font-label-caps text-label-caps hover:opacity-80 transition-opacity duration-200">Vaults</a>
+              <Link to="/about" className="text-on-surface-variant font-label-caps text-label-caps hover:opacity-80 transition-opacity duration-200">About Us</Link>
+              <Link to="/contact" className="text-on-surface-variant font-label-caps text-label-caps hover:opacity-80 transition-opacity duration-200">Contact Us</Link>
             </nav>
           </div>
           <div className="flex items-center gap-md">
@@ -280,7 +281,23 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
+          </div>
         </div>
+
+        {/* Legal & Trust Footer */}
+        <footer className="w-full max-w-container-max mx-auto mt-xl pt-lg border-t border-white/10 pb-8">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-secondary">verified_user</span>
+              <span className="font-label-caps text-on-surface-variant text-sm tracking-widest uppercase">Trust & Verification</span>
+            </div>
+            <div className="flex flex-wrap justify-center md:justify-end gap-x-6 gap-y-3">
+              <a href="/legal/terms.html" className="text-on-surface-variant text-sm hover:text-secondary hover:underline transition-colors">Terms & Conditions</a>
+              <a href="/legal/privacy.html" className="text-on-surface-variant text-sm hover:text-secondary hover:underline transition-colors">Privacy Policy</a>
+              <a href="/legal/refund.html" className="text-on-surface-variant text-sm hover:text-secondary hover:underline transition-colors">Refund & Cancellation Policy</a>
+            </div>
+          </div>
+        </footer>
       </main>
 
       {/* BottomNavBar (Mobile Only) */}
