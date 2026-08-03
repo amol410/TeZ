@@ -80,7 +80,7 @@ app.use((req, res, next) => {
     // If a specific static asset (CSS, JS, images) is requested and exists
     if (req.path !== '/' && require('fs').existsSync(requestedPath) && require('fs').statSync(requestedPath).isFile()) {
       res.setHeader('Cache-Control', 'public, max-age=31536000');
-      return res.sendFile(requestedPath, (err) => {
+      return res.sendFile(requestedPath, { dotfiles: 'allow' }, (err) => {
         if (err && !res.headersSent) {
           next(err);
         }
@@ -91,10 +91,16 @@ app.use((req, res, next) => {
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
-    return res.sendFile(indexPath, (err) => {
+    return res.sendFile(indexPath, { dotfiles: 'allow' }, (err) => {
       if (err && !res.headersSent) {
-        console.error('Error sending index.html:', err);
-        res.status(500).send(`<h3>Error serving index.html: ${err.message}</h3>`);
+        try {
+          // Fallback to direct fs read if sendFile is blocked by hostinger path rules
+          const htmlContent = require('fs').readFileSync(indexPath, 'utf8');
+          res.type('html').send(htmlContent);
+        } catch (readErr) {
+          console.error('Error sending index.html:', err);
+          res.status(500).send(`<h3>Error serving index.html: ${err.message}</h3>`);
+        }
       }
     });
   }
