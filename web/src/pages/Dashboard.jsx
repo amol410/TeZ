@@ -87,7 +87,7 @@ const Dashboard = () => {
             <nav className="flex gap-md">
               <Link to="/" className="text-secondary font-bold font-label-caps text-label-caps hover:opacity-80 transition-opacity duration-200">Home</Link>
               <Link to="/send-money" className="text-on-surface-variant font-label-caps text-label-caps hover:opacity-80 transition-opacity duration-200">Pay</Link>
-              <a href="#" className="text-on-surface-variant font-label-caps text-label-caps hover:opacity-80 transition-opacity duration-200">History</a>
+              <Link to="/history" className="text-on-surface-variant font-label-caps text-label-caps hover:opacity-80 transition-opacity duration-200">History</Link>
               <a href="#" className="text-on-surface-variant font-label-caps text-label-caps hover:opacity-80 transition-opacity duration-200">Vaults</a>
             </nav>
           </div>
@@ -186,7 +186,7 @@ const Dashboard = () => {
             <div className="vault-card rounded-xl p-md">
               <div className="flex justify-between items-center mb-md">
                 <h3 className="font-headline-md text-body-lg font-bold text-on-surface">Recent Transactions</h3>
-                <button className="text-secondary font-label-caps text-label-caps hover:underline">VIEW ALL</button>
+                <Link to="/history" className="text-secondary font-label-caps text-label-caps hover:underline">VIEW ALL</Link>
               </div>
               <div className="space-y-sm">
                 {transactions.length === 0 ? (
@@ -293,10 +293,10 @@ const Dashboard = () => {
           <span className="material-symbols-outlined">send</span>
           <span className="font-label-caps text-label-caps">Pay</span>
         </Link>
-        <button className="flex flex-col items-center justify-center text-on-surface-variant hover:text-secondary transition-colors duration-200 active:scale-90 transition-all duration-200">
+        <Link to="/history" className="flex flex-col items-center justify-center text-on-surface-variant hover:text-secondary transition-colors duration-200 active:scale-90 transition-all duration-200">
           <span className="material-symbols-outlined">receipt_long</span>
           <span className="font-label-caps text-label-caps">History</span>
-        </button>
+        </Link>
         <button onClick={handleLogout} className="flex flex-col items-center justify-center text-on-surface-variant hover:text-error transition-colors duration-200 active:scale-90 transition-all duration-200">
           <span className="material-symbols-outlined">logout</span>
           <span className="font-label-caps text-label-caps">Logout</span>
