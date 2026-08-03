@@ -51,24 +51,33 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'TezSend API is running' });
 });
 
-// ─── Global error handler ─────────────────────────────────────────────────────
-app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
-  res.status(500).json({ message: 'Internal server error' });
-});
-
 // ─── Serve React frontend (production) ───────────────────────────────────────
 const frontendDist = path.resolve(__dirname, '..', 'web', 'dist');
 if (require('fs').existsSync(frontendDist)) {
   app.use(express.static(frontendDist));
   // SPA fallback — all non-API routes serve index.html
-  app.get('*', (req, res) => {
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/api')) return next();
     res.sendFile(path.join(frontendDist, 'index.html'));
   });
   console.log(`📦 Serving frontend from: ${frontendDist}`);
 } else {
   console.log('ℹ️  No frontend build found. Run: cd web && npm run build');
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/api')) return next();
+    res.status(404).send(`
+      <h2>TezSend API is running, but the Frontend is missing!</h2>
+      <p>The backend could not find the React build folder at <code>${frontendDist}</code>.</p>
+      <p>This means your <strong>Build command</strong> failed on Hostinger.</p>
+    `);
+  });
 }
+
+// ─── Global error handler ─────────────────────────────────────────────────────
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({ message: 'Internal server error' });
+});
 
 // ─── Start server ─────────────────────────────────────────────────────────────
 const server = app.listen(PORT, () => {
