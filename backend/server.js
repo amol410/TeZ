@@ -51,44 +51,73 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'TezSend API is running' });
 });
 
-// ─── Serve React frontend (production) ───────────────────────────────────────
-const frontendDist = path.resolve(__dirname, '..', 'web', 'dist');
-const indexPath = path.join(frontendDist, 'index.html');
-
-if (require('fs').existsSync(indexPath)) {
-  // Serve static assets with a long cache time
-  app.use(express.static(frontendDist, {
-    setHeaders: (res, path) => {
-      if (path.endsWith('.html')) {
-        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-        res.setHeader('Pragma', 'no-cache');
-        res.setHeader('Expires', '0');
-      } else {
-        res.setHeader('Cache-Control', 'public, max-age=31536000');
-      }
+// ─── Dynamic Frontend Resolution & Serving ───────────────────────────────────
+function getIndexPath() {
+  const candidates = [
+    path.resolve(__dirname, '..', 'web', 'dist', 'index.html'),
+    path.resolve(__dirname, 'web', 'dist', 'index.html'),
+    path.resolve(__dirname, 'dist', 'index.html'),
+    path.resolve(__dirname, '..', 'dist', 'index.html'),
+    path.resolve(__dirname, '..', 'public_html', 'index.html'),
+  ];
+  for (const candidate of candidates) {
+    if (require('fs').existsSync(candidate)) {
+      return candidate;
     }
-  }));
+  }
+  return null;
+}
 
-  // SPA fallback — all non-API routes serve index.html with NO CACHE
-  app.use((req, res, next) => {
-    if (req.path.startsWith('/api')) return next();
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api')) return next();
+
+  const indexPath = getIndexPath();
+
+  if (indexPath) {
+    const distDir = path.dirname(indexPath);
+    const requestedPath = path.join(distDir, req.path);
+
+    // If a specific static asset (CSS, JS, images) is requested and exists
+    if (req.path !== '/' && require('fs').existsSync(requestedPath) && require('fs').statSync(requestedPath).isFile()) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000');
+      return res.sendFile(requestedPath, (err) => {
+        if (err && !res.headersSent) {
+          next(err);
+        }
+      });
+    }
+
+    // SPA fallback — serve index.html for all other routes
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
-    res.sendFile(path.join(frontendDist, 'index.html'));
-  });
-  console.log(`📦 Serving frontend from: ${frontendDist}`);
-} else {
-  console.log('ℹ️  No frontend build found. Run: cd web && npm run build');
-  app.use((req, res, next) => {
-    if (req.path.startsWith('/api')) return next();
-    res.status(404).send(`
-      <h2>TezSend API is running, but the Frontend is missing!</h2>
-      <p>The backend could not find the React build folder at <code>${frontendDist}</code>.</p>
-      <p>This means your <strong>Build command</strong> failed on Hostinger.</p>
-    `);
-  });
-}
+    return res.sendFile(indexPath, (err) => {
+      if (err && !res.headersSent) {
+        console.error('Error sending index.html:', err);
+        res.status(500).send(`<h3>Error serving index.html: ${err.message}</h3>`);
+      }
+    });
+  }
+
+  // Diagnostic 404 if index.html is missing
+  const checkedPaths = [
+    path.resolve(__dirname, '..', 'web', 'dist', 'index.html'),
+    path.resolve(__dirname, 'web', 'dist', 'index.html'),
+    path.resolve(__dirname, 'dist', 'index.html'),
+    path.resolve(__dirname, '..', 'dist', 'index.html'),
+  ];
+
+  res.status(404).send(`
+    <div style="font-family: system-ui, sans-serif; padding: 2rem; max-width: 650px; margin: 40px auto; background: #0f172a; color: #f8fafc; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+      <h2 style="color: #f43f5e; margin-top: 0;">⚠️ TezSend API is running, but Frontend is missing!</h2>
+      <p>The backend could not find <code>index.html</code> in any of these expected locations:</p>
+      <ul style="background: #1e293b; padding: 1rem 1.5rem; border-radius: 8px; font-family: monospace; font-size: 13px;">
+        ${checkedPaths.map(p => `<li style="margin-bottom: 6px;">${p}</li>`).join('')}
+      </ul>
+      <p style="color: #94a3b8; font-size: 14px;">This means the React build (<code>npm run build</code> in the <code>web</code> directory) did not complete during Hostinger deployment.</p>
+    </div>
+  `);
+});
 
 // ─── Global error handler ─────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
