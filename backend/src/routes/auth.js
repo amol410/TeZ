@@ -13,7 +13,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key';
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID';
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
-const SAFE_FIELDS = 'id, phone, email, name, googleId, avatar, createdAt, updatedAt';
+const SAFE_FIELDS = 'id, phone, email, name, googleId, avatar, lmsRole AS role, lmsIsActive AS isActive, createdAt, updatedAt';
 
 const signToken = (userId) => jwt.sign({ userId }, JWT_SECRET, { expiresIn: '7d' });
 

@@ -7,6 +7,14 @@ const cardRoutes = require('./src/routes/cards');
 const beneficiaryRoutes = require('./src/routes/beneficiaries');
 const transactionRoutes = require('./src/routes/transactions');
 
+// ─── LMS Routes ───────────────────────────────────────────────────────────────
+const lmsSubjectRoutes   = require('./src/routes/lms/subjects');
+const lmsNoteRoutes      = require('./src/routes/lms/notes');
+const lmsVideoRoutes     = require('./src/routes/lms/videos');
+const lmsQuizRoutes      = require('./src/routes/lms/quizzes');
+const lmsFlashcardRoutes = require('./src/routes/lms/flashcards');
+const lmsAdminRoutes     = require('./src/routes/lms/admin');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -48,6 +56,7 @@ app.use(
 app.use(express.json());
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
+// ─── TezSend (Payment) Routes ────────────────────────────────────────────────
 app.use('/api/auth', authRoutes);
 app.use('/api/cards', cardRoutes);
 app.use('/api/beneficiaries', beneficiaryRoutes);
@@ -61,84 +70,76 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'TezSend API is running' });
 });
 
-// ─── Root redirect → /transferred ───────────────────────────────────────────
+// ─── LMS (DolphinCoder → tezsend.com) Routes ─────────────────────────────────
+app.use('/api/subjects',   lmsSubjectRoutes);
+app.use('/api/notes',      lmsNoteRoutes);
+app.use('/api/videos',     lmsVideoRoutes);
+app.use('/api/quizzes',    lmsQuizRoutes);
+app.use('/api/flashcards', lmsFlashcardRoutes);
+app.use('/api/admin',      lmsAdminRoutes);
+
+// ─── Root redirect → /transferred (TezSend app) ─────────────────────────────
 // tezsend.com → tezsend.com/transferred
 app.get('/', (req, res) => {
   res.redirect(301, '/transferred');
 });
 
-// ─── Dynamic Frontend Resolution & Serving ───────────────────────────────────
-function getIndexPath() {
-  const candidates = [
-    path.resolve(__dirname, '..', 'web', 'dist', 'index.html'),
-    path.resolve(__dirname, 'web', 'dist', 'index.html'),
-    path.resolve(__dirname, 'dist', 'index.html'),
-    path.resolve(__dirname, '..', 'dist', 'index.html'),
-    path.resolve(__dirname, '..', 'public_html', 'index.html'),
-  ];
-  for (const candidate of candidates) {
-    if (require('fs').existsSync(candidate)) {
-      return candidate;
-    }
+// ─── Dual Frontend Serving ────────────────────────────────────────────────────
+// /transferred/* → web/dist   (TezSend payment app)
+// everything else → frontend/dist  (LMS)
+function findDist(candidates) {
+  for (const c of candidates) {
+    if (require('fs').existsSync(c)) return c;
   }
   return null;
+}
+
+const tezIndexPath = findDist([
+  path.resolve(__dirname, '..', 'web', 'dist', 'index.html'),
+  path.resolve(__dirname, 'web', 'dist', 'index.html'),
+  path.resolve(__dirname, 'dist', 'index.html'),
+  path.resolve(__dirname, '..', 'dist', 'index.html'),
+]);
+
+const lmsIndexPath = findDist([
+  path.resolve(__dirname, '..', 'frontend', 'dist', 'index.html'),
+  path.resolve(__dirname, 'frontend', 'dist', 'index.html'),
+  path.resolve(__dirname, '..', 'lms_dist', 'index.html'),
+]);
+
+function serveApp(indexPath, req, res, next) {
+  if (!indexPath) {
+    return res.status(404).send('Frontend not built. Run npm run build.');
+  }
+  const distDir = path.dirname(indexPath);
+  const requestedFile = path.join(distDir, req.path);
+  if (req.path !== '/' && require('fs').existsSync(requestedFile) && require('fs').statSync(requestedFile).isFile()) {
+    res.setHeader('Cache-Control', 'public, max-age=31536000');
+    return res.sendFile(requestedFile, (err) => { if (err && !res.headersSent) next(err); });
+  }
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  return res.sendFile(indexPath, (err) => {
+    if (err && !res.headersSent) {
+      try {
+        const html = require('fs').readFileSync(indexPath, 'utf8');
+        res.type('html').send(html);
+      } catch (e) {
+        res.status(500).send('Error serving index.html: ' + err.message);
+      }
+    }
+  });
 }
 
 app.use((req, res, next) => {
   if (req.path.startsWith('/api')) return next();
 
-  const indexPath = getIndexPath();
-
-  if (indexPath) {
-    const distDir = path.dirname(indexPath);
-    const requestedPath = path.join(distDir, req.path);
-
-    // If a specific static asset (CSS, JS, images) is requested and exists
-    if (req.path !== '/' && require('fs').existsSync(requestedPath) && require('fs').statSync(requestedPath).isFile()) {
-      res.setHeader('Cache-Control', 'public, max-age=31536000');
-      return res.sendFile(requestedPath, { dotfiles: 'allow' }, (err) => {
-        if (err && !res.headersSent) {
-          next(err);
-        }
-      });
-    }
-
-    // SPA fallback — serve index.html for all other routes
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-    return res.sendFile(indexPath, { dotfiles: 'allow' }, (err) => {
-      if (err && !res.headersSent) {
-        try {
-          // Fallback to direct fs read if sendFile is blocked by hostinger path rules
-          const htmlContent = require('fs').readFileSync(indexPath, 'utf8');
-          res.type('html').send(htmlContent);
-        } catch (readErr) {
-          console.error('Error sending index.html:', err);
-          res.status(500).send(`<h3>Error serving index.html: ${err.message}</h3>`);
-        }
-      }
-    });
+  // /transferred/* → TezSend payment app
+  if (req.path.startsWith('/transferred')) {
+    return serveApp(tezIndexPath, req, res, next);
   }
 
-  // Diagnostic 404 if index.html is missing
-  const checkedPaths = [
-    path.resolve(__dirname, '..', 'web', 'dist', 'index.html'),
-    path.resolve(__dirname, 'web', 'dist', 'index.html'),
-    path.resolve(__dirname, 'dist', 'index.html'),
-    path.resolve(__dirname, '..', 'dist', 'index.html'),
-  ];
-
-  res.status(404).send(`
-    <div style="font-family: system-ui, sans-serif; padding: 2rem; max-width: 650px; margin: 40px auto; background: #0f172a; color: #f8fafc; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
-      <h2 style="color: #f43f5e; margin-top: 0;">⚠️ TezSend API is running, but Frontend is missing!</h2>
-      <p>The backend could not find <code>index.html</code> in any of these expected locations:</p>
-      <ul style="background: #1e293b; padding: 1rem 1.5rem; border-radius: 8px; font-family: monospace; font-size: 13px;">
-        ${checkedPaths.map(p => `<li style="margin-bottom: 6px;">${p}</li>`).join('')}
-      </ul>
-      <p style="color: #94a3b8; font-size: 14px;">This means the React build (<code>npm run build</code> in the <code>web</code> directory) did not complete during Hostinger deployment.</p>
-    </div>
-  `);
+  // everything else → LMS app
+  return serveApp(lmsIndexPath, req, res, next);
 });
 
 // ─── Global error handler ─────────────────────────────────────────────────────

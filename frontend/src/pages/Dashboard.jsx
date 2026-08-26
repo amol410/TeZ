@@ -1,0 +1,204 @@
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import api from '../api/axios';
+import {
+  BookOpen, Video, Brain, Layers, ArrowRight, TrendingUp,
+  Clock, Plus, Zap, Flame,
+} from 'lucide-react';
+
+export default function Dashboard() {
+  const { user } = useAuth();
+  const [stats, setStats] = useState({ notes: 0, videos: 0, quizzes: 0, flashcards: 0 });
+  const [recentNotes, setRecentNotes] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const [notesRes, videosRes, quizzesRes, flashcardsRes] = await Promise.allSettled([
+          api.get('/notes?limit=3'),
+          api.get('/videos?limit=1'),
+          api.get('/quizzes?limit=1'),
+          api.get('/flashcards?limit=1'),
+        ]);
+        if (notesRes.status === 'fulfilled') {
+          setStats(prev => ({ ...prev, notes: notesRes.value.data.pagination?.total || 0 }));
+          setRecentNotes(notesRes.value.data.notes || []);
+        }
+        if (videosRes.status === 'fulfilled') setStats(prev => ({ ...prev, videos: videosRes.value.data.pagination?.total || 0 }));
+        if (quizzesRes.status === 'fulfilled') setStats(prev => ({ ...prev, quizzes: quizzesRes.value.data.pagination?.total || 0 }));
+        if (flashcardsRes.status === 'fulfilled') setStats(prev => ({ ...prev, flashcards: flashcardsRes.value.data.pagination?.total || 0 }));
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+
+  const isStaff = user?.role === 'trainer' || user?.role === 'admin';
+
+  const statCards = [
+    { to: '/notes', icon: BookOpen, label: 'Notes', value: stats.notes, gradient: 'from-blue-500 to-cyan-500', shadow: 'shadow-blue-900/30', border: 'border-blue-500/15', action: isStaff ? '/notes/new' : null },
+    { to: '/videos', icon: Video, label: 'Videos', value: stats.videos, gradient: 'from-red-500 to-orange-500', shadow: 'shadow-red-900/30', border: 'border-red-500/15', action: isStaff ? '/videos/new' : null },
+    { to: '/quizzes', icon: Brain, label: 'Quizzes', value: stats.quizzes, gradient: 'from-purple-500 to-pink-500', shadow: 'shadow-purple-900/30', border: 'border-purple-500/15', action: isStaff ? '/quizzes/new' : null },
+    { to: '/flashcards', icon: Layers, label: 'Flashcard Decks', value: stats.flashcards, gradient: 'from-green-500 to-emerald-500', shadow: 'shadow-green-900/30', border: 'border-green-500/15', action: isStaff ? '/flashcards/new' : null },
+  ];
+
+  const quickActions = isStaff
+    ? [
+        { to: '/notes/new', icon: BookOpen, label: 'Write a Note', desc: 'Create study material', color: 'text-blue-400', bg: 'bg-blue-500/10' },
+        { to: '/flashcards/new', icon: Layers, label: 'Create Deck', desc: 'Build flashcards', color: 'text-green-400', bg: 'bg-green-500/10' },
+        { to: '/videos/new', icon: Video, label: 'Add Video', desc: 'Embed YouTube', color: 'text-red-400', bg: 'bg-red-500/10' },
+        { to: '/quizzes/new', icon: Brain, label: 'New Quiz', desc: 'Create a quiz', color: 'text-purple-400', bg: 'bg-purple-500/10' },
+      ]
+    : [
+        { to: '/quizzes', icon: Brain, label: 'Take a Quiz', desc: 'Test yourself', color: 'text-purple-400', bg: 'bg-purple-500/10' },
+        { to: '/videos', icon: Video, label: 'Watch Videos', desc: 'Learn from videos', color: 'text-red-400', bg: 'bg-red-500/10' },
+        { to: '/flashcards', icon: Layers, label: 'Study Flashcards', desc: 'Spaced repetition', color: 'text-green-400', bg: 'bg-green-500/10' },
+        { to: '/notes', icon: BookOpen, label: 'Read Notes', desc: 'Study materials', color: 'text-blue-400', bg: 'bg-blue-500/10' },
+      ];
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 animate-fade-in">
+      {/* Hero greeting */}
+      <div className="glass-card p-6 mb-8 bg-gradient-to-r from-dolphin-600/10 to-ocean-600/10 border border-dolphin-500/20 gradient-border">
+        <div className="flex items-center gap-4">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-dolphin-500 to-ocean-500 flex items-center justify-center text-white text-2xl font-black shadow-xl shadow-dolphin-900/40 flex-shrink-0">
+            {user?.name?.charAt(0).toUpperCase()}
+          </div>
+          <div className="flex-1">
+            <p className="text-gray-400 text-sm mb-1">{greeting} 👋</p>
+            <h1 className="text-3xl font-black text-white">
+              Welcome back, <span className="gradient-text">{user?.name?.split(' ')[0]}!</span>
+            </h1>
+            <p className="text-gray-500 text-sm mt-1 capitalize flex items-center gap-2">
+              <Zap className="w-3.5 h-3.5 text-dolphin-500" />
+              {user?.role} • TezSend LMS
+            </p>
+          </div>
+          <div className="hidden md:flex items-center gap-2 text-orange-400">
+            <Flame className="w-5 h-5" />
+            <span className="text-sm font-semibold">Keep learning!</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {statCards.map(({ to, icon: Icon, label, value, gradient, shadow, border, action }) => (
+          <div key={to} className={`glass-card p-5 border ${border} hover:scale-[1.03] transition-all duration-300 group`}>
+            <div className="flex items-center justify-between mb-4">
+              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center shadow-lg ${shadow}`}>
+                <Icon className="w-5 h-5 text-white" />
+              </div>
+              {action && (
+                <Link to={action} className="w-7 h-7 rounded-lg bg-white/8 flex items-center justify-center hover:bg-white/15 transition-colors" title="Create new">
+                  <Plus className="w-3.5 h-3.5 text-gray-400" />
+                </Link>
+              )}
+            </div>
+            <Link to={to}>
+              <div className="text-3xl font-black text-white mb-0.5">{loading ? '—' : value}</div>
+              <div className="text-gray-500 text-sm group-hover:text-gray-400 transition-colors">{label}</div>
+            </Link>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Quick Actions */}
+        <div className="glass-card p-6">
+          <h2 className="text-lg font-semibold text-white mb-5 flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-dolphin-400" />
+            Quick Actions
+          </h2>
+          <div className="space-y-2">
+            {quickActions.map(({ to, icon: Icon, label, desc, color, bg }) => (
+              <Link
+                key={to}
+                to={to}
+                className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/8 transition-all duration-200 group"
+              >
+                <div className={`w-9 h-9 rounded-xl ${bg} flex items-center justify-center flex-shrink-0`}>
+                  <Icon className={`w-4 h-4 ${color}`} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-sm font-medium group-hover:text-dolphin-300 transition-colors">{label}</p>
+                  <p className="text-gray-600 text-xs">{desc}</p>
+                </div>
+                <ArrowRight className="w-4 h-4 text-gray-700 group-hover:text-gray-400 transition-colors flex-shrink-0" />
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* Recent Notes */}
+        <div className="lg:col-span-2 glass-card p-6">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+              <Clock className="w-5 h-5 text-dolphin-400" />
+              Recent Notes
+            </h2>
+            <Link to="/notes" className="text-sm text-dolphin-400 hover:text-dolphin-300 transition-colors flex items-center gap-1">
+              View all <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          {loading ? (
+            <div className="space-y-3">
+              {[1,2,3].map(i => <div key={i} className="skeleton h-14 rounded-xl" />)}
+            </div>
+          ) : recentNotes.length === 0 ? (
+            <div className="text-center py-10">
+              <BookOpen className="w-12 h-12 text-gray-800 mx-auto mb-3" />
+              <p className="text-gray-600 text-sm mb-4">No notes yet</p>
+              {isStaff && (
+                <Link to="/notes/new" className="btn-primary inline-flex items-center gap-2 text-sm px-4 py-2">
+                  <Plus className="w-3.5 h-3.5" />
+                  Create First Note
+                </Link>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {recentNotes.map(note => {
+                const colorAccent = {
+                  default: 'bg-gray-500', blue: 'bg-blue-500', green: 'bg-green-500',
+                  yellow: 'bg-yellow-500', pink: 'bg-pink-500', purple: 'bg-purple-500',
+                }[note.color] || 'bg-gray-500';
+
+                return (
+                  <Link
+                    key={note._id}
+                    to={`/notes/${note._id}`}
+                    className="flex items-center gap-3 p-3.5 rounded-xl hover:bg-white/8 transition-all duration-200 group"
+                  >
+                    <div className={`w-1 h-10 rounded-full flex-shrink-0 ${colorAccent}`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white text-sm font-medium group-hover:text-dolphin-300 transition-colors truncate">{note.title}</p>
+                      <p className="text-gray-600 text-xs mt-0.5">
+                        {new Date(note.updatedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                      </p>
+                    </div>
+                    {note.tags?.length > 0 && (
+                      <span className="badge bg-white/8 text-gray-500 border border-white/8 text-xs hidden sm:inline-flex">
+                        {note.tags[0]}
+                      </span>
+                    )}
+                    <ArrowRight className="w-4 h-4 text-gray-700 group-hover:text-gray-400 flex-shrink-0" />
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
