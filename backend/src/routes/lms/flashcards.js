@@ -90,13 +90,21 @@ router.get('/', async (req, res) => {
 // ─── POST /api/flashcards ────────────────────────────────────────────────────
 router.post('/', authorize('trainer', 'admin'), async (req, res) => {
   try {
-    const { deckName, description = '', cards = [], color = 'default', isPublic = false, tags = [] } = req.body;
+    const { deckName, description = '', cards = [], color = 'default', isPublic = false, tags = [], moduleId } = req.body;
     if (!cards.length) return res.status(400).json({ success: false, message: 'At least one card is required' });
 
     const [result] = await db.query(
       `INSERT INTO lms_flashcards (owner, deckName, description, cards, cardCount, color, isPublic, tags) VALUES (?,?,?,?,?,?,?,?)`,
       [req.user.id, deckName, description, JSON.stringify(cards), cards.length, color, isPublic ? 1 : 0, JSON.stringify(tags)]
     );
+
+    if (moduleId) {
+      await db.query(
+        `INSERT INTO lms_course_items (moduleId, itemType, itemId) VALUES (?, 'flashcard', ?)`,
+        [moduleId, result.insertId]
+      );
+    }
+
     const [rows] = await db.query('SELECT * FROM lms_flashcards WHERE id = ?', [result.insertId]);
     res.status(201).json({ success: true, deck: formatDeck(rows[0]) });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }

@@ -72,7 +72,7 @@ router.get('/:id', async (req, res) => {
 // ─── POST /api/videos ────────────────────────────────────────────────────────
 router.post('/', protect, authorize('trainer', 'admin'), async (req, res) => {
   try {
-    const { title, description = '', youtubeUrl, tags = [], isPublic = true } = req.body;
+    const { title, description = '', youtubeUrl, tags = [], isPublic = true, moduleId } = req.body;
     const youtubeVideoId = extractYouTubeId(youtubeUrl);
     if (!youtubeVideoId) return res.status(400).json({ success: false, message: 'Invalid YouTube URL' });
 
@@ -82,6 +82,14 @@ router.post('/', protect, authorize('trainer', 'admin'), async (req, res) => {
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [req.user.id, title, description, youtubeUrl, youtubeVideoId, thumbnailUrl, JSON.stringify(tags), isPublic ? 1 : 0]
     );
+
+    if (moduleId) {
+      await db.query(
+        `INSERT INTO lms_course_items (moduleId, itemType, itemId) VALUES (?, 'video', ?)`,
+        [moduleId, result.insertId]
+      );
+    }
+
     const [rows] = await db.query('SELECT * FROM lms_videos WHERE id = ?', [result.insertId]);
     res.status(201).json({ success: true, video: formatVideo(rows[0]) });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }

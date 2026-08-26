@@ -80,12 +80,20 @@ router.get('/:id', async (req, res) => {
 // ─── POST /api/notes ─────────────────────────────────────────────────────────
 router.post('/', authorize('trainer', 'admin'), async (req, res) => {
   try {
-    const { title, content, tags = [], color = 'default', isPinned = false, contentType = 'richtext', subject, topic } = req.body;
+    const { title, content, tags = [], color = 'default', isPinned = false, contentType = 'richtext', subject, topic, moduleId } = req.body;
     const [result] = await db.query(
       `INSERT INTO lms_notes (owner, subjectId, topic, title, content, tags, isPinned, color, contentType)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [req.user.id, subject || null, topic || null, title, content, JSON.stringify(tags), isPinned ? 1 : 0, color, contentType]
     );
+
+    if (moduleId) {
+      await db.query(
+        `INSERT INTO lms_course_items (moduleId, itemType, itemId) VALUES (?, 'note', ?)`,
+        [moduleId, result.insertId]
+      );
+    }
+
     const [rows] = await db.query('SELECT * FROM lms_notes WHERE id = ?', [result.insertId]);
     res.status(201).json({ success: true, note: formatNote(rows[0]) });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
@@ -125,12 +133,20 @@ router.post('/upload', authorize('trainer', 'admin'), upload.single('file'), asy
     }
 
     const [result] = await db.query(
-      `INSERT INTO lms_notes (owner, title, content, contentType, tags, color, isPinned, subjectId, topic) VALUES (?,?,?,?,?,?,?,?,?)`,
-      [req.user.id, title || 'Uploaded Note', content, contentType, JSON.stringify(parsedTags),
-       color || 'default', isPinned === 'true' ? 1 : 0, subject || null, topic || null]
-    );
-    const [rows] = await db.query('SELECT * FROM lms_notes WHERE id = ?', [result.insertId]);
-    res.status(201).json({ success: true, note: formatNote(rows[0]) });
+        `INSERT INTO lms_notes (owner, subjectId, topic, title, content, tags, isPinned, color, contentType)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [req.user.id, subject || null, topic || null, title || req.file.originalname, content, JSON.stringify(parsedTags), isPinned === 'true' ? 1 : 0, color || 'default', contentType]
+      );
+
+      if (req.body.moduleId) {
+        await db.query(
+          `INSERT INTO lms_course_items (moduleId, itemType, itemId) VALUES (?, 'note', ?)`,
+          [req.body.moduleId, result.insertId]
+        );
+      }
+
+      const [rows] = await db.query('SELECT * FROM lms_notes WHERE id = ?', [result.insertId]);
+      res.status(201).json({ success: true, note: formatNote(rows[0]) });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 

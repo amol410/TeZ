@@ -89,7 +89,7 @@ router.get('/:id', protect, async (req, res) => {
 router.post('/', protect, authorize('trainer', 'admin'), async (req, res) => {
   try {
     const { title, description = '', questions, passingScore = 70, timeLimit = 0,
-            shuffleQuestions = false, isPublished = true, tags = [], subject, topic } = req.body;
+            shuffleQuestions = false, isPublished = true, tags = [], subject, topic, moduleId } = req.body;
     if (!questions?.length) return res.status(400).json({ success: false, message: 'At least one question is required' });
 
     const withIds = assignIds(questions);
@@ -101,6 +101,14 @@ router.post('/', protect, authorize('trainer', 'admin'), async (req, res) => {
        JSON.stringify(withIds), JSON.stringify(tags), totalPoints,
        passingScore, timeLimit, shuffleQuestions ? 1 : 0, isPublished ? 1 : 0]
     );
+
+    if (moduleId) {
+      await db.query(
+        `INSERT INTO lms_course_items (moduleId, itemType, itemId) VALUES (?, 'quiz', ?)`,
+        [moduleId, result.insertId]
+      );
+    }
+
     const [rows] = await db.query('SELECT * FROM lms_quizzes WHERE id = ?', [result.insertId]);
     res.status(201).json({ success: true, quiz: formatQuiz(rows[0]) });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }

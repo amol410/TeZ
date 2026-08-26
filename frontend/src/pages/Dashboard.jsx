@@ -10,21 +10,36 @@ import {
 export default function Dashboard() {
   const { user } = useAuth();
   const [stats, setStats] = useState({ notes: 0, videos: 0, quizzes: 0, flashcards: 0 });
-  const [recentNotes, setRecentNotes] = useState([]);
+  const [recentItems, setRecentItems] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const isStaff = user?.role === 'trainer' || user?.role === 'admin';
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [notesRes, videosRes, quizzesRes, flashcardsRes] = await Promise.allSettled([
+        const fetchPromises = isStaff ? [
           api.get('/notes?limit=3'),
           api.get('/videos?limit=1'),
           api.get('/quizzes?limit=1'),
           api.get('/flashcards?limit=1'),
-        ]);
-        if (notesRes.status === 'fulfilled') {
-          setStats(prev => ({ ...prev, notes: notesRes.value.data.pagination?.total || 0 }));
-          setRecentNotes(notesRes.value.data.notes || []);
+        ] : [
+          api.get('/courses/my'),
+          api.get('/videos?limit=1'),
+          api.get('/quizzes?limit=1'),
+          api.get('/flashcards?limit=1'),
+        ];
+
+        const [itemRes, videosRes, quizzesRes, flashcardsRes] = await Promise.allSettled(fetchPromises);
+        
+        if (itemRes.status === 'fulfilled') {
+          if (isStaff) {
+            setStats(prev => ({ ...prev, notes: itemRes.value.data.pagination?.total || 0 }));
+            setRecentItems(itemRes.value.data.notes || []);
+          } else {
+            setStats(prev => ({ ...prev, notes: itemRes.value.data.courses?.length || 0 }));
+            setRecentItems(itemRes.value.data.courses?.slice(0, 3) || []);
+          }
         }
         if (videosRes.status === 'fulfilled') setStats(prev => ({ ...prev, videos: videosRes.value.data.pagination?.total || 0 }));
         if (quizzesRes.status === 'fulfilled') setStats(prev => ({ ...prev, quizzes: quizzesRes.value.data.pagination?.total || 0 }));
@@ -36,23 +51,21 @@ export default function Dashboard() {
       }
     };
     fetchStats();
-  }, []);
+  }, [isStaff]);
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
-  const isStaff = user?.role === 'trainer' || user?.role === 'admin';
-
   const statCards = isStaff ? [
-    { to: '/courses/manage', icon: BookOpen, label: 'Manage Courses', value: stats.totalNotes || 0, gradient: 'from-blue-500 to-indigo-500', shadow: 'shadow-blue-900/20', border: 'border-blue-500/20', action: '/courses/new' },
-    { to: '/videos', icon: Video, label: 'Total Videos', value: stats.totalVideos || 0, gradient: 'from-red-500 to-pink-500', shadow: 'shadow-red-900/20', border: 'border-red-500/20', action: '/videos/new' },
-    { to: '/quizzes', icon: Brain, label: 'Active Quizzes', value: stats.totalQuizzes || 0, gradient: 'from-purple-500 to-fuchsia-500', shadow: 'shadow-purple-900/20', border: 'border-purple-500/20', action: '/quizzes/new' },
-    { to: '/flashcards', icon: Layers, label: 'Flashcard Decks', value: stats.totalFlashcards || 0, gradient: 'from-green-500 to-emerald-500', shadow: 'shadow-green-900/20', border: 'border-green-500/20', action: '/flashcards/new' },
+    { to: '/courses/manage', icon: BookOpen, label: 'Manage Courses', value: stats.notes || 0, gradient: 'from-blue-500 to-indigo-500', shadow: 'shadow-blue-900/20', border: 'border-blue-500/20', action: '/courses/new' },
+    { to: '/videos', icon: Video, label: 'Total Videos', value: stats.videos || 0, gradient: 'from-red-500 to-pink-500', shadow: 'shadow-red-900/20', border: 'border-red-500/20', action: '/videos/new' },
+    { to: '/quizzes', icon: Brain, label: 'Active Quizzes', value: stats.quizzes || 0, gradient: 'from-purple-500 to-fuchsia-500', shadow: 'shadow-purple-900/20', border: 'border-purple-500/20', action: '/quizzes/new' },
+    { to: '/flashcards', icon: Layers, label: 'Flashcard Decks', value: stats.flashcards || 0, gradient: 'from-green-500 to-emerald-500', shadow: 'shadow-green-900/20', border: 'border-green-500/20', action: '/flashcards/new' },
   ] : [
-    { to: '/courses/my', icon: BookOpen, label: 'My Courses', value: stats.totalNotes || 0, gradient: 'from-blue-500 to-indigo-500', shadow: 'shadow-blue-900/20', border: 'border-blue-500/20' },
-    { to: '/videos', icon: Video, label: 'Saved Videos', value: stats.totalVideos || 0, gradient: 'from-red-500 to-pink-500', shadow: 'shadow-red-900/20', border: 'border-red-500/20' },
-    { to: '/quizzes', icon: Brain, label: 'Quizzes Taken', value: stats.totalQuizzes || 0, gradient: 'from-purple-500 to-fuchsia-500', shadow: 'shadow-purple-900/20', border: 'border-purple-500/20' },
-    { to: '/flashcards', icon: Layers, label: 'Decks Mastered', value: stats.totalFlashcards || 0, gradient: 'from-green-500 to-emerald-500', shadow: 'shadow-green-900/20', border: 'border-green-500/20' },
+    { to: '/courses/my', icon: BookOpen, label: 'My Courses', value: stats.notes || 0, gradient: 'from-blue-500 to-indigo-500', shadow: 'shadow-blue-900/20', border: 'border-blue-500/20' },
+    { to: '/videos', icon: Video, label: 'Saved Videos', value: stats.videos || 0, gradient: 'from-red-500 to-pink-500', shadow: 'shadow-red-900/20', border: 'border-red-500/20' },
+    { to: '/quizzes', icon: Brain, label: 'Quizzes Taken', value: stats.quizzes || 0, gradient: 'from-purple-500 to-fuchsia-500', shadow: 'shadow-purple-900/20', border: 'border-purple-500/20' },
+    { to: '/flashcards', icon: Layers, label: 'Decks Mastered', value: stats.flashcards || 0, gradient: 'from-green-500 to-emerald-500', shadow: 'shadow-green-900/20', border: 'border-green-500/20' },
   ];
 
   const quickActions = isStaff
@@ -143,14 +156,14 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Recent Notes */}
+        {/* Recent Items Panel */}
         <div className="lg:col-span-2 glass-card p-6">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-lg font-semibold text-white flex items-center gap-2">
               <Clock className="w-5 h-5 text-dolphin-400" />
-              Recent Notes
+              {isStaff ? 'Recent Notes' : 'My Courses'}
             </h2>
-            <Link to="/notes" className="text-sm text-dolphin-400 hover:text-dolphin-300 transition-colors flex items-center gap-1">
+            <Link to={isStaff ? "/notes" : "/courses/my"} className="text-sm text-dolphin-400 hover:text-dolphin-300 transition-colors flex items-center gap-1">
               View all <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -159,46 +172,79 @@ export default function Dashboard() {
             <div className="space-y-3">
               {[1,2,3].map(i => <div key={i} className="skeleton h-14 rounded-xl" />)}
             </div>
-          ) : recentNotes.length === 0 ? (
+          ) : recentItems.length === 0 ? (
             <div className="text-center py-10">
               <BookOpen className="w-12 h-12 text-gray-800 mx-auto mb-3" />
-              <p className="text-gray-600 text-sm mb-4">No notes yet</p>
-              {isStaff && (
+              <p className="text-gray-600 text-sm mb-4">
+                {isStaff ? 'No notes yet' : 'Not enrolled in any courses yet'}
+              </p>
+              {isStaff ? (
                 <Link to="/notes/new" className="btn-primary inline-flex items-center gap-2 text-sm px-4 py-2">
                   <Plus className="w-3.5 h-3.5" />
                   Create First Note
+                </Link>
+              ) : (
+                <Link to="/courses" className="btn-primary inline-flex items-center gap-2 text-sm px-4 py-2">
+                  Browse Courses
                 </Link>
               )}
             </div>
           ) : (
             <div className="space-y-2">
-              {recentNotes.map(note => {
-                const colorAccent = {
-                  default: 'bg-gray-500', blue: 'bg-blue-500', green: 'bg-green-500',
-                  yellow: 'bg-yellow-500', pink: 'bg-pink-500', purple: 'bg-purple-500',
-                }[note.color] || 'bg-gray-500';
+              {recentItems.map(item => {
+                if (isStaff) {
+                  // Rendering a Note
+                  const colorAccent = {
+                    default: 'bg-gray-500', blue: 'bg-blue-500', green: 'bg-green-500',
+                    yellow: 'bg-yellow-500', pink: 'bg-pink-500', purple: 'bg-purple-500',
+                  }[item.color] || 'bg-gray-500';
 
-                return (
-                  <Link
-                    key={note._id}
-                    to={`/notes/${note._id}`}
-                    className="flex items-center gap-3 p-3.5 rounded-xl hover:bg-white/8 transition-all duration-200 group"
-                  >
-                    <div className={`w-1 h-10 rounded-full flex-shrink-0 ${colorAccent}`} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white text-sm font-medium group-hover:text-dolphin-300 transition-colors truncate">{note.title}</p>
-                      <p className="text-gray-600 text-xs mt-0.5">
-                        {new Date(note.updatedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                      </p>
-                    </div>
-                    {note.tags?.length > 0 && (
-                      <span className="badge bg-white/8 text-gray-500 border border-white/8 text-xs hidden sm:inline-flex">
-                        {note.tags[0]}
-                      </span>
-                    )}
-                    <ArrowRight className="w-4 h-4 text-gray-700 group-hover:text-gray-400 flex-shrink-0" />
-                  </Link>
-                );
+                  return (
+                    <Link
+                      key={item._id || item.id}
+                      to={`/notes/${item._id || item.id}`}
+                      className="flex items-center gap-3 p-3.5 rounded-xl hover:bg-white/8 transition-all duration-200 group"
+                    >
+                      <div className={`w-1 h-10 rounded-full flex-shrink-0 ${colorAccent}`} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white text-sm font-medium group-hover:text-dolphin-300 transition-colors truncate">{item.title}</p>
+                        <p className="text-gray-600 text-xs mt-0.5">
+                          {new Date(item.updatedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                        </p>
+                      </div>
+                      {item.tags?.length > 0 && (
+                        <span className="badge bg-white/8 text-gray-500 border border-white/8 text-xs hidden sm:inline-flex">
+                          {item.tags[0]}
+                        </span>
+                      )}
+                      <ArrowRight className="w-4 h-4 text-gray-700 group-hover:text-gray-400 flex-shrink-0" />
+                    </Link>
+                  );
+                } else {
+                  // Rendering a Course
+                  return (
+                    <Link
+                      key={item._id || item.id}
+                      to={`/courses/${item._id || item.id}/learn`}
+                      className="flex items-center gap-3 p-3.5 rounded-xl hover:bg-white/8 transition-all duration-200 group border border-white/5 bg-black/20"
+                    >
+                      {item.thumbnailUrl ? (
+                        <img src={item.thumbnailUrl} alt={item.title} className="w-16 h-10 object-cover rounded-md" />
+                      ) : (
+                        <div className="w-16 h-10 bg-indigo-500/20 rounded-md flex items-center justify-center">
+                          <BookOpen className="w-5 h-5 text-indigo-400" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white text-sm font-medium group-hover:text-dolphin-300 transition-colors truncate">{item.title}</p>
+                        <p className="text-gray-500 text-xs mt-0.5 truncate">
+                          By {item.instructorName}
+                        </p>
+                      </div>
+                      <span className="text-xs font-semibold text-indigo-400 px-2 py-1 rounded bg-indigo-400/10">Start</span>
+                    </Link>
+                  );
+                }
               })}
             </div>
           )}

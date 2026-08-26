@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
-import { ArrowLeft, Plus, Trash2, Save, Brain, ChevronDown, ChevronUp, Upload, FileText, Globe, Lock, Download } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Save, Brain, ChevronDown, ChevronUp, Upload, FileText, Globe, Lock, Download, BookOpen } from 'lucide-react';
 import clsx from 'clsx';
 import { CodeSnippetForm } from '../components/quiz/CodeSnippetQuestion';
 import { useSubjects } from '../hooks/useSubjects';
@@ -40,7 +40,31 @@ export default function QuizFormPage() {
   const [bulkSubject, setBulkSubject] = useState('');
   const [bulkTopic, setBulkTopic] = useState('');
 
+  // Course Selector State
+  const [courses, setCourses] = useState([]);
+  const [selectedCourseId, setSelectedCourseId] = useState('');
+  const [modules, setModules] = useState([]);
+  const [selectedModuleId, setSelectedModuleId] = useState('');
+
   const { subjects, createSubject, createTopic } = useSubjects();
+
+  useEffect(() => {
+    if (!isEdit) {
+      api.get('/courses/manage/all').then(res => setCourses(res.data.courses || []));
+    }
+  }, [isEdit]);
+
+  useEffect(() => {
+    if (selectedCourseId) {
+      api.get(`/courses/${selectedCourseId}`).then(res => {
+        setModules(res.data.course.modules || []);
+        setSelectedModuleId('');
+      });
+    } else {
+      setModules([]);
+      setSelectedModuleId('');
+    }
+  }, [selectedCourseId]);
 
   useEffect(() => {
     if (isEdit) {
@@ -159,7 +183,7 @@ export default function QuizFormPage() {
         await api.put(`/quizzes/${id}`, { ...form, questions });
         toast.success('Quiz updated!');
       } else {
-        await api.post('/quizzes', { ...form, questions });
+        await api.post('/quizzes', { ...form, questions, moduleId: selectedModuleId || undefined });
         toast.success('Quiz created!');
       }
       navigate('/quizzes');
@@ -342,9 +366,39 @@ POINTS: 1`}</pre>
             </div>
             <div className="flex flex-wrap items-center gap-4">
               <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={form.shuffleQuestions} onChange={e => setForm({ ...form, shuffleQuestions: e.target.checked })} className="accent-purple-500" />
-                <span className="text-gray-300 text-sm">Shuffle questions</span>
+                <input type="checkbox" checked={form.shuffleQuestions} onChange={e => setForm({ ...form, shuffleQuestions: e.target.checked })} className="w-4 h-4 rounded bg-gray-800 border-gray-600 text-dolphin-500 focus:ring-dolphin-500 focus:ring-offset-gray-900" />
+                <span className="text-gray-300 text-sm">Shuffle questions for each attempt</span>
               </label>
+            </div>
+          </div>
+
+          {!isEdit && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 p-5 border border-white/10 rounded-xl bg-black/20">
+              <div className="col-span-full mb-1">
+                <h3 className="font-semibold text-white flex items-center gap-2"><BookOpen className="w-4 h-4 text-indigo-400" /> Add to Course (Optional)</h3>
+                <p className="text-sm text-gray-400">Directly assign this quiz to a course section upon creation.</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">Select Course</label>
+                <select value={selectedCourseId} onChange={e => setSelectedCourseId(e.target.value)} className="input-field py-1.5 text-sm h-10">
+                  <option value="">-- None --</option>
+                  {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+                </select>
+              </div>
+              {selectedCourseId && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">Select Section (Module)</label>
+                  <select value={selectedModuleId} onChange={e => setSelectedModuleId(e.target.value)} className="input-field py-1.5 text-sm h-10" required={!!selectedCourseId}>
+                    <option value="">-- Select Section --</option>
+                    {modules.map(m => <option key={m.id} value={m.id}>{m.title}</option>)}
+                  </select>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="pt-6">
+            <div className="flex items-center justify-between mb-4">
               <button
                 type="button"
                 onClick={() => setForm({ ...form, isPublished: !form.isPublished })}

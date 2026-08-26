@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
-import { ArrowLeft, Plus, Trash2, Save, Layers, Globe, Lock, Upload, FileText } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Save, Layers, Globe, Lock, Upload, FileText, BookOpen } from 'lucide-react';
 import clsx from 'clsx';
 
 const colors = ['default', 'blue', 'green', 'yellow', 'pink', 'purple'];
@@ -23,6 +23,30 @@ export default function FlashcardFormPage() {
   const [saving, setSaving] = useState(false);
   const [bulkFile, setBulkFile] = useState(null);
   const [bulkUploading, setBulkUploading] = useState(false);
+
+  // Course Selector State
+  const [courses, setCourses] = useState([]);
+  const [selectedCourseId, setSelectedCourseId] = useState('');
+  const [modules, setModules] = useState([]);
+  const [selectedModuleId, setSelectedModuleId] = useState('');
+
+  useEffect(() => {
+    if (!isEdit) {
+      api.get('/courses/manage/all').then(res => setCourses(res.data.courses || []));
+    }
+  }, [isEdit]);
+
+  useEffect(() => {
+    if (selectedCourseId) {
+      api.get(`/courses/${selectedCourseId}`).then(res => {
+        setModules(res.data.course.modules || []);
+        setSelectedModuleId('');
+      });
+    } else {
+      setModules([]);
+      setSelectedModuleId('');
+    }
+  }, [selectedCourseId]);
 
   useEffect(() => {
     if (isEdit) {
@@ -87,7 +111,7 @@ export default function FlashcardFormPage() {
         await api.put(`/flashcards/${id}`, { ...form, cards });
         toast.success('Deck updated!');
       } else {
-        await api.post('/flashcards', { ...form, cards });
+        await api.post('/flashcards', { ...form, cards, moduleId: selectedModuleId || undefined });
         toast.success('Deck created!');
       }
       navigate('/flashcards');
@@ -225,9 +249,34 @@ HINT: Named after Monty Python`}</pre>
           </div>
         </div>
 
+        {!isEdit && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 p-5 border border-white/10 rounded-xl bg-black/20">
+            <div className="col-span-full mb-1">
+              <h3 className="font-semibold text-white flex items-center gap-2"><BookOpen className="w-4 h-4 text-indigo-400" /> Add to Course (Optional)</h3>
+              <p className="text-sm text-gray-400">Directly assign this flashcard deck to a course section upon creation.</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">Select Course</label>
+              <select value={selectedCourseId} onChange={e => setSelectedCourseId(e.target.value)} className="input-field py-1.5 text-sm h-10">
+                <option value="">-- None --</option>
+                {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+              </select>
+            </div>
+            {selectedCourseId && (
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">Select Section (Module)</label>
+                <select value={selectedModuleId} onChange={e => setSelectedModuleId(e.target.value)} className="input-field py-1.5 text-sm h-10" required={!!selectedCourseId}>
+                  <option value="">-- Select Section --</option>
+                  {modules.map(m => <option key={m.id} value={m.id}>{m.title}</option>)}
+                </select>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Cards */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-white">Cards ({cards.length})</h2>
           </div>
 

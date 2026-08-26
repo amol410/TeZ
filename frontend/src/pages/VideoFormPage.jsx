@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
-import { ArrowLeft, Save, Youtube, Tag, X } from 'lucide-react';
+import { ArrowLeft, Save, Youtube, Tag, X, BookOpen } from 'lucide-react';
 
 export default function VideoFormPage() {
   const { id } = useParams();
@@ -12,6 +12,30 @@ export default function VideoFormPage() {
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState('');
   const [saving, setSaving] = useState(false);
+
+  // Course Selector State
+  const [courses, setCourses] = useState([]);
+  const [selectedCourseId, setSelectedCourseId] = useState('');
+  const [modules, setModules] = useState([]);
+  const [selectedModuleId, setSelectedModuleId] = useState('');
+
+  useEffect(() => {
+    if (!isEdit) {
+      api.get('/courses/manage/all').then(res => setCourses(res.data.courses || []));
+    }
+  }, [isEdit]);
+
+  useEffect(() => {
+    if (selectedCourseId) {
+      api.get(`/courses/${selectedCourseId}`).then(res => {
+        setModules(res.data.course.modules || []);
+        setSelectedModuleId('');
+      });
+    } else {
+      setModules([]);
+      setSelectedModuleId('');
+    }
+  }, [selectedCourseId]);
 
   useEffect(() => {
     if (isEdit) {
@@ -40,7 +64,11 @@ export default function VideoFormPage() {
         await api.put(`/videos/${id}`, { ...form, tags });
         toast.success('Video updated!');
       } else {
-        await api.post('/videos', { ...form, tags });
+        await api.post('/videos', { 
+          ...form, 
+          tags,
+          moduleId: selectedModuleId || undefined 
+        });
         toast.success('Video added!');
       }
       navigate('/videos');
@@ -129,6 +157,31 @@ export default function VideoFormPage() {
             />
             <span className="text-gray-300 text-sm">Make this video public</span>
           </label>
+
+          {!isEdit && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 p-5 border border-white/10 rounded-xl bg-black/20">
+              <div className="col-span-full mb-1">
+                <h3 className="font-semibold text-white flex items-center gap-2"><BookOpen className="w-4 h-4 text-indigo-400" /> Add to Course (Optional)</h3>
+                <p className="text-sm text-gray-400">Directly assign this video to a course section upon creation.</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">Select Course</label>
+                <select value={selectedCourseId} onChange={e => setSelectedCourseId(e.target.value)} className="input-field">
+                  <option value="">-- None --</option>
+                  {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+                </select>
+              </div>
+              {selectedCourseId && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">Select Section (Module)</label>
+                  <select value={selectedModuleId} onChange={e => setSelectedModuleId(e.target.value)} className="input-field" required={!!selectedCourseId}>
+                    <option value="">-- Select Section --</option>
+                    {modules.map(m => <option key={m.id} value={m.id}>{m.title}</option>)}
+                  </select>
+                </div>
+              )}
+            </div>
+          )}
 
           <button type="submit" disabled={saving} className="btn-primary w-full flex items-center justify-center gap-2">
             {saving ? (

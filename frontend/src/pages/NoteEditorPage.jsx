@@ -13,6 +13,7 @@ import {
 import clsx from 'clsx';
 import { useSubjects } from '../hooks/useSubjects';
 import { downloadNoteTemplate } from '../utils/downloadTemplateDoc';
+import { BookOpen } from 'lucide-react';
 
 const colors = ['default', 'blue', 'green', 'yellow', 'pink', 'purple'];
 const colorDots = {
@@ -54,7 +55,31 @@ export default function NoteEditorPage() {
   const [subject, setSubject] = useState('');
   const [topic, setTopic] = useState('');
 
+  // Course Selector State
+  const [courses, setCourses] = useState([]);
+  const [selectedCourseId, setSelectedCourseId] = useState('');
+  const [modules, setModules] = useState([]);
+  const [selectedModuleId, setSelectedModuleId] = useState('');
+
   const { subjects, createSubject, createTopic } = useSubjects();
+
+  useEffect(() => {
+    if (!isEdit) {
+      api.get('/courses/manage/all').then(res => setCourses(res.data.courses || []));
+    }
+  }, [isEdit]);
+
+  useEffect(() => {
+    if (selectedCourseId) {
+      api.get(`/courses/${selectedCourseId}`).then(res => {
+        setModules(res.data.course.modules || []);
+        setSelectedModuleId('');
+      });
+    } else {
+      setModules([]);
+      setSelectedModuleId('');
+    }
+  }, [selectedCourseId]);
 
   const editor = useEditor({
     extensions: [StarterKit, Underline],
@@ -141,7 +166,7 @@ export default function NoteEditorPage() {
           await api.put(`/notes/${id}`, { title, content, tags, color, isPinned, contentType: 'richtext', subject, topic });
           toast.success('Note updated!');
         } else {
-          await api.post('/notes', { title, content, tags, color, isPinned, contentType: 'richtext', subject, topic });
+          await api.post('/notes', { title, content, tags, color, isPinned, contentType: 'richtext', subject, topic, moduleId: selectedModuleId || undefined });
           toast.success('Note created!');
         }
       } else {
@@ -154,6 +179,7 @@ export default function NoteEditorPage() {
         formData.append('isPinned', isPinned);
         if (subject) formData.append('subject', subject);
         if (topic) formData.append('topic', topic);
+        if (!isEdit && selectedModuleId) formData.append('moduleId', selectedModuleId);
         if (uploadFile) formData.append('file', uploadFile);
         if (isEdit) formData.append('noteId', id);
         await api.post('/notes/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
@@ -255,6 +281,31 @@ export default function NoteEditorPage() {
               </select>
             </div>
           </div>
+
+          {!isEdit && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 p-5 border border-white/10 rounded-xl bg-black/20">
+              <div className="col-span-full mb-1">
+                <h3 className="font-semibold text-white flex items-center gap-2"><BookOpen className="w-4 h-4 text-indigo-400" /> Add to Course (Optional)</h3>
+                <p className="text-sm text-gray-400">Directly assign this note to a course section upon creation.</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">Select Course</label>
+                <select value={selectedCourseId} onChange={e => setSelectedCourseId(e.target.value)} className="input-field py-1.5 text-sm h-10">
+                  <option value="">-- None --</option>
+                  {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+                </select>
+              </div>
+              {selectedCourseId && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">Select Section (Module)</label>
+                  <select value={selectedModuleId} onChange={e => setSelectedModuleId(e.target.value)} className="input-field py-1.5 text-sm h-10" required={!!selectedCourseId}>
+                    <option value="">-- Select Section --</option>
+                    {modules.map(m => <option key={m.id} value={m.id}>{m.title}</option>)}
+                  </select>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Content area — changes based on mode */}
