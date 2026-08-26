@@ -282,9 +282,26 @@ router.delete('/:id', protect, authorize('trainer', 'admin'), async (req, res) =
       return res.status(403).json({ success: false, message: 'Unauthorized' });
     }
 
+    // Manual cascading to avoid DB constraint errors on shared hosting
+    const [modules] = await db.query(`SELECT id FROM lms_course_modules WHERE courseId = ?`, [req.params.id]);
+    if (modules.length > 0) {
+      const moduleIds = modules.map(m => m.id);
+      await db.query(`DELETE FROM lms_course_items WHERE moduleId IN (?)`, [moduleIds]);
+      await db.query(`DELETE FROM lms_course_modules WHERE courseId = ?`, [req.params.id]);
+    }
+    
+    // Check if lms_enrollments table exists before deleting
+    try {
+      await db.query(`DELETE FROM lms_enrollments WHERE courseId = ?`, [req.params.id]);
+    } catch (e) {
+      // Ignore if table doesn't exist or other error
+      console.warn("Could not delete from lms_enrollments:", e.message);
+    }
+    
     await db.query(`DELETE FROM lms_courses WHERE id = ?`, [req.params.id]);
     res.json({ success: true });
   } catch (err) {
+    console.error('Delete Course Error:', err);
     res.status(500).json({ success: false, message: err.message });
   }
 });
