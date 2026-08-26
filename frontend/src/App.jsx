@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import Navbar from './components/common/Navbar';
+import Footer from './components/common/Footer';
 
 import Landing from './pages/Landing';
 import Login from './pages/Login';
@@ -33,14 +34,22 @@ import CoursePlayerPage from './pages/CoursePlayerPage';
 import CourseManagementPage from './pages/CourseManagementPage';
 import CourseBuilderPage from './pages/CourseBuilderPage';
 
+// Legal Pages
+import AboutUs from './pages/legal/AboutUs';
+import ContactUs from './pages/legal/ContactUs';
+import TermsAndConditions from './pages/legal/TermsAndConditions';
+import PrivacyPolicy from './pages/legal/PrivacyPolicy';
+import RefundPolicy from './pages/legal/RefundPolicy';
+
 function Layout({ children }) {
   const location = useLocation();
   const isQuizTake = location.pathname.includes('/take');
   
   return (
-    <div className={isQuizTake ? "min-h-screen" : "pt-24 min-h-screen"}>
+    <div className={isQuizTake ? "min-h-screen" : "pt-24 min-h-screen flex flex-col"}>
       {!isQuizTake && <Navbar />}
-      <main className={isQuizTake ? "pb-0" : "pb-12"}>{children}</main>
+      <main className={isQuizTake ? "pb-0 flex-1" : "pb-12 flex-1"}>{children}</main>
+      {!isQuizTake && <Footer />}
     </div>
   );
 }
@@ -53,6 +62,13 @@ function AppRoutes() {
       <Route path="/" element={user ? <Navigate to="/dashboard" /> : <Landing />} />
       <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
       <Route path="/register" element={user ? <Navigate to="/dashboard" /> : <Register />} />
+
+      {/* Legal Routes */}
+      <Route path="/about" element={<Layout><AboutUs /></Layout>} />
+      <Route path="/contact" element={<Layout><ContactUs /></Layout>} />
+      <Route path="/terms" element={<Layout><TermsAndConditions /></Layout>} />
+      <Route path="/privacy" element={<Layout><PrivacyPolicy /></Layout>} />
+      <Route path="/refund-policy" element={<Layout><RefundPolicy /></Layout>} />
 
       <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
 
