@@ -113,7 +113,7 @@ export default function QuizzesPage() {
               className="select-field text-sm py-2 min-w-36 disabled:opacity-40"
             >
               <option value="">All Topics</option>
-              {filterTopics.map(t => <option key={t._id} value={t.name}>{t.name}</option>)}
+              {filterTopics.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
             </select>
           </div>
         </div>
@@ -132,10 +132,10 @@ export default function QuizzesPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {quizzes.map(quiz => {
             const diff = difficultyColor(quiz.questions);
-            const createdById = quiz.createdBy?._id ?? quiz.createdBy?.id ?? quiz.createdBy;
-            const isOwner = (user?.role === 'trainer' || user?.role === 'admin') && createdById == user._id;
+            const createdById = quiz.createdBy?.id ?? quiz.createdBy?.id ?? quiz.createdBy;
+            const isOwner = (user?.role === 'trainer' || user?.role === 'admin') && createdById == user.id;
             return (
-              <div key={quiz._id} className="glass-card p-5 border border-purple-500/10 hover:border-purple-500/25 transition-all duration-300 group flex flex-col">
+              <div key={quiz.id} className="glass-card p-5 border border-purple-500/10 hover:border-purple-500/25 transition-all duration-300 group flex flex-col">
                 {/* Header */}
                 <div className="flex items-start justify-between mb-3">
                   <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-900/30 flex-shrink-0">
@@ -187,12 +187,12 @@ export default function QuizzesPage() {
 
                 {/* Actions */}
                 <div className="flex gap-2 mt-auto">
-                  <Link to={`/quizzes/${quiz._id}/take`} className="flex-1 btn-primary text-sm py-2 flex items-center justify-center gap-2">
+                  <Link to={`/quizzes/${quiz.id}/take`} className="flex-1 btn-primary text-sm py-2 flex items-center justify-center gap-2">
                     <Play className="w-3.5 h-3.5" />
                     Take Quiz
                   </Link>
                   {isOwner && (
-                    <Link to={`/quizzes/${quiz._id}/edit`} className="btn-icon p-2.5 border border-white/10" title="Edit">
+                    <Link to={`/quizzes/${quiz.id}/edit`} className="btn-icon p-2.5 border border-white/10" title="Edit">
                       <Pencil className="w-3.5 h-3.5" />
                     </Link>
                   )}

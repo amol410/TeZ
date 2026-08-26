@@ -42,14 +42,14 @@ export default function StudyPage() {
   const handleFlip = () => { setFlipped(!flipped); setShowHint(false); };
 
   const handleRate = (status) => {
-    setResults(prev => ({ ...prev, [card._id]: status }));
+    setResults(prev => ({ ...prev, [card.id]: status }));
     if (currentIdx < total - 1) {
       setCurrentIdx(currentIdx + 1);
       setFlipped(false);
       setShowHint(false);
     } else {
       setDone(true);
-      saveProgress({ ...results, [card._id]: status });
+      saveProgress({ ...results, [card.id]: status });
     }
   };
 
@@ -57,10 +57,10 @@ export default function StudyPage() {
     setSaving(true);
     try {
       const cardResults = deck.cards.map(c => ({
-        cardId: c._id,
-        status: finalResults[c._id] || 'unseen',
-        reviewCount: finalResults[c._id] ? 1 : 0,
-        lastReviewedAt: finalResults[c._id] ? new Date() : null,
+        cardId: c.id,
+        status: finalResults[c.id] || 'unseen',
+        reviewCount: finalResults[c.id] ? 1 : 0,
+        lastReviewedAt: finalResults[c.id] ? new Date() : null,
       }));
       await api.post(`/flashcards/${id}/progress`, { cardResults });
     } catch {

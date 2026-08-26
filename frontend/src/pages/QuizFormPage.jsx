@@ -268,7 +268,7 @@ POINTS: 1`}</pre>
                 <select value={bulkTopic} onChange={e => handleTopicChange(e.target.value, bulkSubject, true)} className="select-field text-sm">
                   <option value="">Select Topic (Optional)</option>
                   {subjects.find(s => s.id === parseInt(bulkSubject))?.topics?.map(t => (
-                    <option key={t._id} value={t.name}>{t.name}</option>
+                    <option key={t.id} value={t.name}>{t.name}</option>
                   ))}
                   <option value="CREATE_NEW" className="font-bold text-purple-400">+ Create New Topic</option>
                 </select>
@@ -344,7 +344,7 @@ POINTS: 1`}</pre>
                 >
                   <option value="">Select Topic (Optional)</option>
                   {form.subject && subjects.find(s => s.id === parseInt(form.subject))?.topics?.map(t => (
-                    <option key={t._id} value={t.name}>{t.name}</option>
+                    <option key={t.id} value={t.name}>{t.name}</option>
                   ))}
                   {form.subject && <option value="CREATE_NEW" className="font-bold text-purple-400">+ Create New Topic</option>}
                 </select>

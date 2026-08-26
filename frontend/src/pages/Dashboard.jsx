@@ -201,8 +201,8 @@ export default function Dashboard() {
 
                   return (
                     <Link
-                      key={item._id || item.id}
-                      to={`/notes/${item._id || item.id}`}
+                      key={item.id}
+                      to={`/notes/${item.id}`}
                       className="flex items-center gap-3 p-3.5 rounded-xl hover:bg-white/8 transition-all duration-200 group"
                     >
                       <div className={`w-1 h-10 rounded-full flex-shrink-0 ${colorAccent}`} />
@@ -224,8 +224,8 @@ export default function Dashboard() {
                   // Rendering a Course
                   return (
                     <Link
-                      key={item._id || item.id}
-                      to={`/courses/${item._id || item.id}/learn`}
+                      key={item.id}
+                      to={`/courses/${item.id}/learn`}
                       className="flex items-center gap-3 p-3.5 rounded-xl hover:bg-white/8 transition-all duration-200 group border border-white/5 bg-black/20"
                     >
                       {item.thumbnailUrl ? (

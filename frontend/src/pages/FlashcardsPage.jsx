@@ -54,7 +54,7 @@ export default function FlashcardsPage() {
     if (!confirm('Delete this deck?')) return;
     try {
       await api.delete(`/flashcards/${id}`);
-      setDecks(prev => prev.filter(d => d._id !== id));
+      setDecks(prev => prev.filter(d => d.id !== id));
       toast.success('Deck deleted');
     } catch {
       toast.error('Failed to delete');
@@ -104,13 +104,13 @@ export default function FlashcardsPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {decks.map(deck => {
-            const ownerId = deck.owner?._id ?? deck.owner?.id ?? deck.owner;
-            const isOwner = ownerId == user?._id;
+            const ownerId = deck.owner?.id ?? deck.owner?.id ?? deck.owner;
+            const isOwner = ownerId == user?.id;
             return (
               <div
-                key={deck._id}
+                key={deck.id}
                 className="overflow-hidden rounded-2xl hover:scale-[1.03] hover:shadow-2xl transition-all duration-300 group cursor-pointer border border-white/10"
-                onClick={() => navigate(`/flashcards/${deck._id}/study`)}
+                onClick={() => navigate(`/flashcards/${deck.id}/study`)}
               >
                 {/* Color header */}
                 <div className={clsx('h-36 bg-gradient-to-br flex flex-col items-center justify-center relative', deckColors[deck.color] || deckColors.default)}>
@@ -142,7 +142,7 @@ export default function FlashcardsPage() {
 
                   <div className="flex gap-2">
                     <button
-                      onClick={(e) => { e.stopPropagation(); navigate(`/flashcards/${deck._id}/study`); }}
+                      onClick={(e) => { e.stopPropagation(); navigate(`/flashcards/${deck.id}/study`); }}
                       className="flex-1 btn-primary text-sm py-2.5 flex items-center justify-center gap-2 font-semibold"
                     >
                       <Play className="w-4 h-4" />
@@ -150,7 +150,7 @@ export default function FlashcardsPage() {
                     </button>
                     {isOwner && (
                       <button
-                        onClick={(e) => { e.stopPropagation(); navigate(`/flashcards/${deck._id}/edit`); }}
+                        onClick={(e) => { e.stopPropagation(); navigate(`/flashcards/${deck.id}/edit`); }}
                         className="btn-secondary text-sm px-4 py-2.5 font-medium"
                       >
                         Edit

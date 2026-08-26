@@ -92,8 +92,8 @@ export default function VideosPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {videos.map(video => (
               <div
-                key={video._id}
-                onClick={() => navigate(`/videos/${video._id}`)}
+                key={video.id}
+                onClick={() => navigate(`/videos/${video.id}`)}
                 className="glass-card overflow-hidden hover:scale-[1.02] transition-all duration-300 cursor-pointer group border border-white/5 hover:border-red-500/20"
               >
                 <div className="relative aspect-video overflow-hidden bg-gray-900">

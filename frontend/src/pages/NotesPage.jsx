@@ -77,7 +77,7 @@ export default function NotesPage() {
     try {
       await api.patch(`/notes/${id}/pin`);
       setNotes(prev =>
-        prev.map(n => n._id === id ? { ...n, isPinned: !isPinned } : n)
+        prev.map(n => n.id === id ? { ...n, isPinned: !isPinned } : n)
           .sort((a, b) => b.isPinned - a.isPinned || new Date(b.updatedAt) - new Date(a.updatedAt))
       );
       toast.success(isPinned ? 'Unpinned' : 'Pinned!');
@@ -88,7 +88,7 @@ export default function NotesPage() {
     if (!confirm('Delete this note?')) return;
     try {
       await api.delete(`/notes/${id}`);
-      setNotes(prev => prev.filter(n => n._id !== id));
+      setNotes(prev => prev.filter(n => n.id !== id));
       toast.success('Note deleted');
     } catch { toast.error('Failed to delete'); }
   };
@@ -154,7 +154,7 @@ export default function NotesPage() {
               className="select-field text-sm py-2 min-w-36 disabled:opacity-40"
             >
               <option value="">All Topics</option>
-              {filterTopics.map(t => <option key={t._id} value={t.name}>{t.name}</option>)}
+              {filterTopics.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
             </select>
           </div>
         </div>
@@ -202,7 +202,7 @@ export default function NotesPage() {
                 <Pin className="w-3.5 h-3.5 text-yellow-500" /> Pinned
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {pinned.map(note => <NoteCard key={note._id} note={note} onPin={handlePin} onDelete={handleDelete} isStaff={isStaff} />)}
+                {pinned.map(note => <NoteCard key={note.id} note={note} onPin={handlePin} onDelete={handleDelete} isStaff={isStaff} />)}
               </div>
             </div>
           )}
@@ -212,7 +212,7 @@ export default function NotesPage() {
             <div>
               {pinned.length > 0 && <h2 className="text-sm font-medium text-gray-500 mb-3 flex items-center gap-2"><SortDesc className="w-3.5 h-3.5" /> All Notes</h2>}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {unpinned.map(note => <NoteCard key={note._id} note={note} onPin={handlePin} onDelete={handleDelete} isStaff={isStaff} />)}
+                {unpinned.map(note => <NoteCard key={note.id} note={note} onPin={handlePin} onDelete={handleDelete} isStaff={isStaff} />)}
               </div>
             </div>
           )}
@@ -228,7 +228,7 @@ function NoteCard({ note, onPin, onDelete, isStaff }) {
     <div className={clsx('glass-card border-l-4 p-5 hover:scale-[1.02] transition-all duration-300 group cursor-pointer', color.border, color.bg)}>
       {/* Title row */}
       <div className="flex items-start justify-between mb-3">
-        <Link to={`/notes/${note._id}`} className="flex-1 min-w-0">
+        <Link to={`/notes/${note.id}`} className="flex-1 min-w-0">
           <h3 className="text-white font-bold text-base leading-snug group-hover:text-dolphin-300 transition-colors">
             {note.isPinned && <Pin className="inline w-3.5 h-3.5 text-yellow-400 fill-yellow-400 mr-1.5 -mt-0.5" />}
             {note.title}
@@ -236,13 +236,13 @@ function NoteCard({ note, onPin, onDelete, isStaff }) {
         </Link>
         {isStaff && (
           <div className="flex items-center gap-0.5 ml-2 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-            <button onClick={() => onPin(note._id, note.isPinned)} className="btn-icon p-1.5" title={note.isPinned ? 'Unpin' : 'Pin'}>
+            <button onClick={() => onPin(note.id, note.isPinned)} className="btn-icon p-1.5" title={note.isPinned ? 'Unpin' : 'Pin'}>
               <Pin className={clsx('w-3.5 h-3.5', note.isPinned ? 'text-yellow-400 fill-yellow-400' : 'text-gray-500')} />
             </button>
-            <Link to={`/notes/${note._id}/edit`} className="btn-icon p-1.5" title="Edit">
+            <Link to={`/notes/${note.id}/edit`} className="btn-icon p-1.5" title="Edit">
               <Edit className="w-3.5 h-3.5 text-gray-500" />
             </Link>
-            <button onClick={() => onDelete(note._id)} className="btn-icon p-1.5" title="Delete">
+            <button onClick={() => onDelete(note.id)} className="btn-icon p-1.5" title="Delete">
               <Trash2 className="w-3.5 h-3.5 text-red-400" />
             </button>
           </div>

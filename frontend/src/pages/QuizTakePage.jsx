@@ -123,8 +123,8 @@ export default function QuizTakePage() {
 
     try {
       const answerPayload = quiz.questions.map(q => ({
-        questionId: q._id,
-        chosenIndex: answers[q._id] ?? -1,
+        questionId: q.id,
+        chosenIndex: answers[q.id] ?? -1,
       }));
 
       const { data } = await api.post(`/quizzes/${id}/attempt`, {
@@ -224,7 +224,7 @@ export default function QuizTakePage() {
         </h2>
         <div className="space-y-4">
           {questions.map((q, i) => (
-            <div key={q._id} className={clsx(
+            <div key={q.id} className={clsx(
               'glass-card p-5 border-l-4',
               q.isCorrect ? 'border-green-500/60' : 'border-red-500/60'
             )}>
@@ -308,25 +308,25 @@ export default function QuizTakePage() {
               <h2 className="text-white text-lg font-medium leading-relaxed flex-1">{q.text}</h2>
               <button
                 type="button"
-                onClick={() => toggleFlag(q._id)}
-                title={flagged[q._id] ? 'Remove mark' : 'Mark for review'}
+                onClick={() => toggleFlag(q.id)}
+                title={flagged[q.id] ? 'Remove mark' : 'Mark for review'}
                 className={clsx(
                   'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all duration-200 flex-shrink-0',
-                  flagged[q._id]
+                  flagged[q.id]
                     ? 'bg-orange-500/20 border-orange-500/50 text-orange-400'
                     : 'bg-white/5 border-white/15 text-gray-500 hover:border-orange-500/40 hover:text-orange-400'
                 )}
               >
-                <Flag className={clsx('w-3.5 h-3.5', flagged[q._id] && 'fill-orange-400')} />
-                {flagged[q._id] ? 'Marked' : 'Mark for Review'}
+                <Flag className={clsx('w-3.5 h-3.5', flagged[q.id] && 'fill-orange-400')} />
+                {flagged[q.id] ? 'Marked' : 'Mark for Review'}
               </button>
             </div>
 
             {q.type === 'code-mcq' ? (
               <CodeSnippetDisplay
                 question={q}
-                selectedIndex={answers[q._id]}
-                onSelect={(idx) => handleAnswer(q._id, idx)}
+                selectedIndex={answers[q.id]}
+                onSelect={(idx) => handleAnswer(q.id, idx)}
                 disabled={submitted}
               />
             ) : (
@@ -334,17 +334,17 @@ export default function QuizTakePage() {
                 {q.options.map((opt, optIdx) => (
                   <button
                     key={optIdx}
-                    onClick={() => handleAnswer(q._id, optIdx)}
+                    onClick={() => handleAnswer(q.id, optIdx)}
                     className={clsx(
                       'w-full text-left px-4 py-3.5 rounded-xl border transition-all duration-200 text-sm font-medium',
-                      answers[q._id] === optIdx
+                      answers[q.id] === optIdx
                         ? 'bg-dolphin-600/25 border-dolphin-500/60 text-dolphin-200'
                         : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:border-white/20 hover:text-white'
                     )}
                   >
                     <span className={clsx(
                       'inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold mr-3 flex-shrink-0',
-                      answers[q._id] === optIdx
+                      answers[q.id] === optIdx
                         ? 'bg-dolphin-500 text-white'
                         : 'bg-white/10 text-gray-500'
                     )}>
@@ -404,15 +404,15 @@ export default function QuizTakePage() {
                     'w-full aspect-square rounded-lg text-xs font-bold transition-all duration-200 relative',
                     i === currentQ
                       ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/40 scale-110'
-                      : flagged[ques._id]
+                      : flagged[ques.id]
                         ? 'bg-orange-500/25 text-orange-300 border border-orange-500/40'
-                        : answers[ques._id] !== undefined
+                        : answers[ques.id] !== undefined
                           ? 'bg-green-600/40 text-green-300 border border-green-500/30'
                           : 'bg-white/8 text-gray-500 hover:bg-white/15 hover:text-gray-300'
                   )}
                 >
                   {i + 1}
-                  {flagged[ques._id] && i !== currentQ && (
+                  {flagged[ques.id] && i !== currentQ && (
                     <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-orange-400 rounded-full" />
                   )}
                 </button>

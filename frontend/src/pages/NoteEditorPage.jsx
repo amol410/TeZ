@@ -275,7 +275,7 @@ export default function NoteEditorPage() {
               >
                 <option value="">Select Topic (Optional)</option>
                 {subject && subjects.find(s => s.id === parseInt(subject))?.topics?.map(t => (
-                  <option key={t._id} value={t.name}>{t.name}</option>
+                  <option key={t.id} value={t.name}>{t.name}</option>
                 ))}
                 {subject && <option value="CREATE_NEW" className="font-bold text-purple-400">+ Create New Topic</option>}
               </select>

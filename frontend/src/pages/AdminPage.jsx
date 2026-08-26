@@ -64,7 +64,7 @@ export default function AdminPage() {
   const handleToggleActive = async (userId) => {
     try {
       const { data } = await api.put(`/admin/users/${userId}/toggle-active`);
-      setUsers(prev => prev.map(u => u._id === userId ? { ...u, isActive: data.user.isActive } : u));
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, isActive: data.user.isActive } : u));
       toast.success(data.user.isActive ? 'User activated' : 'User deactivated');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to update user');
@@ -75,7 +75,7 @@ export default function AdminPage() {
     if (!confirm(`Delete user "${userName}"? This cannot be undone.`)) return;
     try {
       await api.delete(`/admin/users/${userId}`);
-      setUsers(prev => prev.filter(u => u._id !== userId));
+      setUsers(prev => prev.filter(u => u.id !== userId));
       toast.success('User deleted');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to delete');
@@ -238,7 +238,7 @@ export default function AdminPage() {
               </thead>
               <tbody className="divide-y divide-white/5">
                 {(tab === 'users' ? users : tab === 'trainers' ? trainers : students).map(u => (
-                  <tr key={u._id} className="hover:bg-white/3 transition-colors">
+                  <tr key={u.id} className="hover:bg-white/3 transition-colors">
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-dolphin-500 to-ocean-500 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
@@ -263,14 +263,14 @@ export default function AdminPage() {
                       {u.role !== 'admin' && (
                         <div className="flex items-center justify-end gap-2">
                           <button
-                            onClick={() => handleToggleActive(u._id)}
+                            onClick={() => handleToggleActive(u.id)}
                             className={`p-1.5 rounded-lg transition-colors ${u.isActive ? 'text-yellow-400 hover:bg-yellow-500/20' : 'text-green-400 hover:bg-green-500/20'}`}
                             title={u.isActive ? 'Deactivate' : 'Activate'}
                           >
                             {u.isActive ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
                           </button>
                           <button
-                            onClick={() => handleDelete(u._id, u.name)}
+                            onClick={() => handleDelete(u.id, u.name)}
                             className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/20 transition-colors"
                             title="Delete user"
                           >
@@ -373,11 +373,11 @@ export default function AdminPage() {
                     {subject.topics?.length > 0 ? (
                       <div className="flex flex-wrap gap-2">
                         {subject.topics.map(topic => (
-                          <div key={topic._id} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                          <div key={topic.id} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20">
                             <Tag className="w-3 h-3 text-blue-400" />
                             <span className="text-blue-300 text-sm">{topic.name}</span>
                             <button
-                              onClick={() => handleDeleteTopic(subject.id, topic._id, topic.name)}
+                              onClick={() => handleDeleteTopic(subject.id, topic.id, topic.name)}
                               className="text-blue-400/50 hover:text-red-400 transition-colors ml-1"
                             >
                               <X className="w-3 h-3" />
