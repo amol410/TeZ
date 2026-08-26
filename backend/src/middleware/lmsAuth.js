@@ -4,8 +4,7 @@ const db  = require('../db');
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key';
 
 // ─── protect ─────────────────────────────────────────────────────────────────
-// Verifies TezSend JWT and populates req.user with { id, name, email, avatar, role }
-// 'role' comes from the lmsRole column added to the User table.
+// Verifies LMS JWT and populates req.user with { id, name, email, avatar, role }
 const protect = async (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) {
@@ -15,9 +14,13 @@ const protect = async (req, res, next) => {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
 
+    if (!decoded.lmsUserId) {
+      return res.status(401).json({ success: false, message: 'Not authorized, invalid token type' });
+    }
+
     const [rows] = await db.query(
-      'SELECT id, name, email, avatar, lmsRole AS role, lmsIsActive AS isActive FROM User WHERE id = ? LIMIT 1',
-      [decoded.userId]
+      'SELECT id, name, email, avatar, role, isActive FROM lms_users WHERE id = ? LIMIT 1',
+      [decoded.lmsUserId]
     );
 
     if (!rows.length) {

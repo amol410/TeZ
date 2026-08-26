@@ -14,6 +14,7 @@ const lmsVideoRoutes     = require('./src/routes/lms/videos');
 const lmsQuizRoutes      = require('./src/routes/lms/quizzes');
 const lmsFlashcardRoutes = require('./src/routes/lms/flashcards');
 const lmsAdminRoutes     = require('./src/routes/lms/admin');
+const lmsAuthRoutes      = require('./src/routes/lms/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -77,6 +78,7 @@ app.use('/api/videos',     lmsVideoRoutes);
 app.use('/api/quizzes',    lmsQuizRoutes);
 app.use('/api/flashcards', lmsFlashcardRoutes);
 app.use('/api/admin',      lmsAdminRoutes);
+app.use('/api/lms-auth',   lmsAuthRoutes);
 
 
 

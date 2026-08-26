@@ -6,8 +6,8 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  // Reuse TezSend's auth token (same JWT, same backend)
-  const token = localStorage.getItem('tezsend_token');
+  // Use LMS custom auth token
+  const token = localStorage.getItem('lms_tezsend_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -18,8 +18,8 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('tezsend_token');
-      localStorage.removeItem('tezsend_user');
+      localStorage.removeItem('lms_tezsend_token');
+      localStorage.removeItem('lms_tezsend_user');
       window.location.href = '/login';
     }
     return Promise.reject(error);

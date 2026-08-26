@@ -4,8 +4,8 @@ import toast from 'react-hot-toast';
 
 const AuthContext = createContext(null);
 
-const TOKEN_KEY = 'tezsend_token';
-const USER_KEY  = 'tezsend_user';
+const TOKEN_KEY = 'lms_tezsend_token';
+const USER_KEY  = 'lms_tezsend_user';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem(TOKEN_KEY);
     if (token && !user) {
-      api.get('/auth/me').then(({ data }) => {
+      api.get('/lms-auth/me').then(({ data }) => {
         const userData = data.user ?? data;
         localStorage.setItem(USER_KEY, JSON.stringify(userData));
         setUser(userData);
@@ -41,12 +41,46 @@ export const AuthProvider = ({ children }) => {
     setUser(userData);
   };
 
+  // ─── Register with Email ─────────────────────────────────────────────────────
+  const registerWithEmail = useCallback(async (name, email, password) => {
+    setLoading(true);
+    try {
+      const { data } = await api.post('/lms-auth/register', { name, email, password });
+      saveAuth(data.token, data.user);
+      toast.success(`Welcome, ${data.user.name}! 🎓`);
+      return { success: true, user: data.user };
+    } catch (error) {
+      const msg = error.response?.data?.message || 'Registration failed';
+      toast.error(msg);
+      return { success: false, message: msg };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // ─── Login with Email ────────────────────────────────────────────────────────
+  const loginWithEmail = useCallback(async (email, password) => {
+    setLoading(true);
+    try {
+      const { data } = await api.post('/lms-auth/login', { email, password });
+      saveAuth(data.token, data.user);
+      toast.success(`Welcome back, ${data.user.name}!`);
+      return { success: true, user: data.user };
+    } catch (error) {
+      const msg = error.response?.data?.message || 'Login failed';
+      toast.error(msg);
+      return { success: false, message: msg };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   // ─── Google Login ────────────────────────────────────────────────────────────
   // Called with the Google access_token from @react-oauth/google
   const loginWithGoogle = useCallback(async (accessToken) => {
     setLoading(true);
     try {
-      const { data } = await api.post('/auth/google', { idToken: accessToken });
+      const { data } = await api.post('/lms-auth/google', { idToken: accessToken });
       saveAuth(data.token, data.user);
       toast.success(`Welcome, ${data.user.name}! 🎓`);
       return { success: true, user: data.user };
@@ -72,7 +106,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, loginWithGoogle, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, loading, registerWithEmail, loginWithEmail, loginWithGoogle, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );
