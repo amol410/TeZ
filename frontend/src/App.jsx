@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { CartProvider } from './contexts/CartContext';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import Navbar from './components/common/Navbar';
 
@@ -22,6 +23,15 @@ import FlashcardFormPage from './pages/FlashcardFormPage';
 import StudyPage from './pages/StudyPage';
 import ProfilePage from './pages/ProfilePage';
 import AdminPage from './pages/AdminPage';
+
+// Course Pages
+import BrowseCoursesPage from './pages/BrowseCoursesPage';
+import CourseDetailsPage from './pages/CourseDetailsPage';
+import CartPage from './pages/CartPage';
+import MyCoursesPage from './pages/MyCoursesPage';
+import CoursePlayerPage from './pages/CoursePlayerPage';
+import CourseManagementPage from './pages/CourseManagementPage';
+import CourseBuilderPage from './pages/CourseBuilderPage';
 
 function Layout({ children }) {
   const location = useLocation();
@@ -66,6 +76,16 @@ function AppRoutes() {
       <Route path="/flashcards/:id/edit" element={<ProtectedRoute roles={['trainer', 'admin']}><Layout><FlashcardFormPage /></Layout></ProtectedRoute>} />
       <Route path="/flashcards/:id/study" element={<ProtectedRoute><Layout><StudyPage /></Layout></ProtectedRoute>} />
 
+      <Route path="/courses" element={<ProtectedRoute><Layout><BrowseCoursesPage /></Layout></ProtectedRoute>} />
+      <Route path="/courses/my" element={<ProtectedRoute><Layout><MyCoursesPage /></Layout></ProtectedRoute>} />
+      <Route path="/courses/manage" element={<ProtectedRoute roles={['trainer', 'admin']}><Layout><CourseManagementPage /></Layout></ProtectedRoute>} />
+      <Route path="/courses/new" element={<ProtectedRoute roles={['trainer', 'admin']}><Layout><CourseBuilderPage /></Layout></ProtectedRoute>} />
+      <Route path="/courses/:id" element={<ProtectedRoute><Layout><CourseDetailsPage /></Layout></ProtectedRoute>} />
+      <Route path="/courses/:id/edit" element={<ProtectedRoute roles={['trainer', 'admin']}><Layout><CourseBuilderPage /></Layout></ProtectedRoute>} />
+      <Route path="/courses/:id/learn" element={<ProtectedRoute><Layout><CoursePlayerPage /></Layout></ProtectedRoute>} />
+      
+      <Route path="/cart" element={<ProtectedRoute><Layout><CartPage /></Layout></ProtectedRoute>} />
+
       <Route path="/admin" element={<ProtectedRoute roles={['admin']}><Layout><AdminPage /></Layout></ProtectedRoute>} />
 
       <Route path="/profile" element={<ProtectedRoute><Layout><ProfilePage /></Layout></ProtectedRoute>} />
@@ -88,22 +108,24 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppRoutes />
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            style: {
-              background: 'rgba(17, 24, 39, 0.95)',
-              color: '#f3f4f6',
-              border: '1px solid rgba(255,255,255,0.1)',
-              backdropFilter: 'blur(12px)',
-              borderRadius: '12px',
-              fontSize: '14px',
-            },
-            success: { iconTheme: { primary: '#22c55e', secondary: '#fff' } },
-            error: { iconTheme: { primary: '#ef4444', secondary: '#fff' } },
-          }}
-        />
+        <CartProvider>
+          <AppRoutes />
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              style: {
+                background: 'rgba(17, 24, 39, 0.95)',
+                color: '#f3f4f6',
+                border: '1px solid rgba(255,255,255,0.1)',
+                backdropFilter: 'blur(12px)',
+                borderRadius: '12px',
+                fontSize: '14px',
+              },
+              success: { iconTheme: { primary: '#22c55e', secondary: '#fff' } },
+              error: { iconTheme: { primary: '#ef4444', secondary: '#fff' } },
+            }}
+          />
+        </CartProvider>
       </AuthProvider>
     </BrowserRouter>
   );

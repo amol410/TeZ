@@ -1,20 +1,23 @@
 import { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useCart } from '../../contexts/CartContext';
 import {
   BookOpen, Video, Brain, Layers, Home, LogOut, User,
-  Menu, X, ChevronDown, Zap, ShieldCheck,
+  Menu, X, ChevronDown, Zap, ShieldCheck, ShoppingCart, GraduationCap
 } from 'lucide-react';
 import clsx from 'clsx';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
+  const { cartCount } = useCart();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
   const navItems = [
     { to: '/dashboard', icon: Home, label: 'Dashboard' },
+    { to: '/courses', icon: GraduationCap, label: 'Courses' },
     { to: '/notes', icon: BookOpen, label: 'Notes' },
     { to: '/videos', icon: Video, label: 'Videos' },
     { to: '/quizzes', icon: Brain, label: 'Quizzes' },
@@ -80,8 +83,17 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* Profile */}
+            {/* Profile & Cart */}
             <div className="hidden md:flex items-center gap-3">
+              <Link to="/cart" className="relative p-2 text-gray-400 hover:text-white hover:bg-white/8 rounded-xl transition-all duration-200">
+                <ShoppingCart className="w-5 h-5" />
+                {cartCount > 0 && (
+                  <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center -mt-1 -mr-1">
+                    {cartCount}
+                  </span>
+                )}
+              </Link>
+              
               <div className="relative">
                 <button
                   onClick={() => setProfileOpen(!profileOpen)}
@@ -176,6 +188,26 @@ export default function Navbar() {
                 Admin Panel
               </NavLink>
             )}
+            <NavLink
+              to="/cart"
+              onClick={() => setMobileOpen(false)}
+              className={({ isActive }) =>
+                clsx(
+                  'flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all',
+                  isActive ? 'bg-dolphin-600/30 text-dolphin-300' : 'text-gray-400 hover:text-white hover:bg-white/8'
+                )
+              }
+            >
+              <div className="flex items-center gap-3">
+                <ShoppingCart className="w-4 h-4" />
+                Cart
+              </div>
+              {cartCount > 0 && (
+                <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                  {cartCount}
+                </span>
+              )}
+            </NavLink>
             <div className="border-t border-white/10 pt-3 mt-3">
               <div className="flex items-center gap-3 px-3 py-2 mb-2">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-dolphin-500 to-ocean-500 flex items-center justify-center text-white text-sm font-bold">

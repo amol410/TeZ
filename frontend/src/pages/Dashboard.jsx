@@ -43,25 +43,30 @@ export default function Dashboard() {
 
   const isStaff = user?.role === 'trainer' || user?.role === 'admin';
 
-  const statCards = [
-    { to: '/notes', icon: BookOpen, label: 'Notes', value: stats.notes, gradient: 'from-blue-500 to-cyan-500', shadow: 'shadow-blue-900/30', border: 'border-blue-500/15', action: isStaff ? '/notes/new' : null },
-    { to: '/videos', icon: Video, label: 'Videos', value: stats.videos, gradient: 'from-red-500 to-orange-500', shadow: 'shadow-red-900/30', border: 'border-red-500/15', action: isStaff ? '/videos/new' : null },
-    { to: '/quizzes', icon: Brain, label: 'Quizzes', value: stats.quizzes, gradient: 'from-purple-500 to-pink-500', shadow: 'shadow-purple-900/30', border: 'border-purple-500/15', action: isStaff ? '/quizzes/new' : null },
-    { to: '/flashcards', icon: Layers, label: 'Flashcard Decks', value: stats.flashcards, gradient: 'from-green-500 to-emerald-500', shadow: 'shadow-green-900/30', border: 'border-green-500/15', action: isStaff ? '/flashcards/new' : null },
+  const statCards = isStaff ? [
+    { to: '/courses/manage', icon: BookOpen, label: 'Manage Courses', value: stats.totalNotes || 0, gradient: 'from-blue-500 to-indigo-500', shadow: 'shadow-blue-900/20', border: 'border-blue-500/20', action: '/courses/new' },
+    { to: '/videos', icon: Video, label: 'Total Videos', value: stats.totalVideos || 0, gradient: 'from-red-500 to-pink-500', shadow: 'shadow-red-900/20', border: 'border-red-500/20', action: '/videos/new' },
+    { to: '/quizzes', icon: Brain, label: 'Active Quizzes', value: stats.totalQuizzes || 0, gradient: 'from-purple-500 to-fuchsia-500', shadow: 'shadow-purple-900/20', border: 'border-purple-500/20', action: '/quizzes/new' },
+    { to: '/flashcards', icon: Layers, label: 'Flashcard Decks', value: stats.totalFlashcards || 0, gradient: 'from-green-500 to-emerald-500', shadow: 'shadow-green-900/20', border: 'border-green-500/20', action: '/flashcards/new' },
+  ] : [
+    { to: '/courses/my', icon: BookOpen, label: 'My Courses', value: stats.totalNotes || 0, gradient: 'from-blue-500 to-indigo-500', shadow: 'shadow-blue-900/20', border: 'border-blue-500/20' },
+    { to: '/videos', icon: Video, label: 'Saved Videos', value: stats.totalVideos || 0, gradient: 'from-red-500 to-pink-500', shadow: 'shadow-red-900/20', border: 'border-red-500/20' },
+    { to: '/quizzes', icon: Brain, label: 'Quizzes Taken', value: stats.totalQuizzes || 0, gradient: 'from-purple-500 to-fuchsia-500', shadow: 'shadow-purple-900/20', border: 'border-purple-500/20' },
+    { to: '/flashcards', icon: Layers, label: 'Decks Mastered', value: stats.totalFlashcards || 0, gradient: 'from-green-500 to-emerald-500', shadow: 'shadow-green-900/20', border: 'border-green-500/20' },
   ];
 
   const quickActions = isStaff
     ? [
+        { to: '/courses/new', icon: BookOpen, label: 'Build Course', desc: 'Create a new course', color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
         { to: '/notes/new', icon: BookOpen, label: 'Write a Note', desc: 'Create study material', color: 'text-blue-400', bg: 'bg-blue-500/10' },
-        { to: '/flashcards/new', icon: Layers, label: 'Create Deck', desc: 'Build flashcards', color: 'text-green-400', bg: 'bg-green-500/10' },
         { to: '/videos/new', icon: Video, label: 'Add Video', desc: 'Embed YouTube', color: 'text-red-400', bg: 'bg-red-500/10' },
         { to: '/quizzes/new', icon: Brain, label: 'New Quiz', desc: 'Create a quiz', color: 'text-purple-400', bg: 'bg-purple-500/10' },
       ]
     : [
+        { to: '/courses', icon: BookOpen, label: 'Browse Courses', desc: 'Find new courses', color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
         { to: '/quizzes', icon: Brain, label: 'Take a Quiz', desc: 'Test yourself', color: 'text-purple-400', bg: 'bg-purple-500/10' },
         { to: '/videos', icon: Video, label: 'Watch Videos', desc: 'Learn from videos', color: 'text-red-400', bg: 'bg-red-500/10' },
         { to: '/flashcards', icon: Layers, label: 'Study Flashcards', desc: 'Spaced repetition', color: 'text-green-400', bg: 'bg-green-500/10' },
-        { to: '/notes', icon: BookOpen, label: 'Read Notes', desc: 'Study materials', color: 'text-blue-400', bg: 'bg-blue-500/10' },
       ];
 
   return (
