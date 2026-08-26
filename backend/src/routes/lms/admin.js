@@ -15,15 +15,15 @@ router.get('/users', async (req, res) => {
 
     let where = '1=1';
     const params = [];
-    if (role) { where += ' AND lmsRole = ?'; params.push(role); }
+    if (role) { where += ' AND role = ?'; params.push(role); }
 
     const [rows] = await db.query(
-      `SELECT id, name, email, avatar, lmsRole AS role, lmsIsActive AS isActive, createdAt
-       FROM User WHERE ${where} ORDER BY createdAt DESC LIMIT ? OFFSET ?`,
+      `SELECT id, name, email, avatar, role, isActive, createdAt
+       FROM lms_users WHERE ${where} ORDER BY createdAt DESC LIMIT ? OFFSET ?`,
       [...params, parseInt(limit), offset]
     );
     const [[{ total }]] = await db.query(
-      `SELECT COUNT(*) AS total FROM User WHERE ${where}`, params
+      `SELECT COUNT(*) AS total FROM lms_users WHERE ${where}`, params
     );
     res.json({
       success: true,
@@ -41,12 +41,12 @@ router.put('/users/:id/role', async (req, res) => {
     if (!['student', 'trainer', 'admin'].includes(role)) {
       return res.status(400).json({ success: false, message: 'Invalid role. Must be student, trainer or admin' });
     }
-    const [rows] = await db.query('SELECT id, lmsRole AS currentRole FROM User WHERE id = ?', [req.params.id]);
+    const [rows] = await db.query('SELECT id, role AS currentRole FROM lms_users WHERE id = ?', [req.params.id]);
     if (!rows.length) return res.status(404).json({ success: false, message: 'User not found' });
 
-    await db.query('UPDATE User SET lmsRole = ?, updatedAt = NOW() WHERE id = ?', [role, req.params.id]);
+    await db.query('UPDATE lms_users SET role = ?, updatedAt = NOW() WHERE id = ?', [role, req.params.id]);
     const [updated] = await db.query(
-      'SELECT id, name, email, avatar, lmsRole AS role, lmsIsActive AS isActive FROM User WHERE id = ?',
+      'SELECT id, name, email, avatar, role, isActive FROM lms_users WHERE id = ?',
       [req.params.id]
     );
     res.json({ success: true, user: { ...updated[0], isActive: !!updated[0].isActive } });
@@ -56,14 +56,14 @@ router.put('/users/:id/role', async (req, res) => {
 // ─── PUT /api/admin/users/:id/toggle-active ──────────────────────────────────
 router.put('/users/:id/toggle-active', async (req, res) => {
   try {
-    const [rows] = await db.query('SELECT id, lmsRole AS role, lmsIsActive AS isActive FROM User WHERE id = ?', [req.params.id]);
+    const [rows] = await db.query('SELECT id, role, isActive FROM lms_users WHERE id = ?', [req.params.id]);
     if (!rows.length) return res.status(404).json({ success: false, message: 'User not found' });
     if (rows[0].role === 'admin') return res.status(403).json({ success: false, message: 'Cannot deactivate an admin' });
 
     const newActive = rows[0].isActive ? 0 : 1;
-    await db.query('UPDATE User SET lmsIsActive = ?, updatedAt = NOW() WHERE id = ?', [newActive, req.params.id]);
+    await db.query('UPDATE lms_users SET isActive = ?, updatedAt = NOW() WHERE id = ?', [newActive, req.params.id]);
     const [updated] = await db.query(
-      'SELECT id, name, email, avatar, lmsRole AS role, lmsIsActive AS isActive FROM User WHERE id = ?',
+      'SELECT id, name, email, avatar, role, isActive FROM lms_users WHERE id = ?',
       [req.params.id]
     );
     res.json({ success: true, user: { ...updated[0], isActive: !!updated[0].isActive } });
@@ -73,9 +73,9 @@ router.put('/users/:id/toggle-active', async (req, res) => {
 // ─── GET /api/admin/stats ────────────────────────────────────────────────────
 router.get('/stats', async (req, res) => {
   try {
-    const [[{ totalUsers }]]     = await db.query('SELECT COUNT(*) AS totalUsers FROM User');
-    const [[{ totalStudents }]]  = await db.query("SELECT COUNT(*) AS totalStudents FROM User WHERE lmsRole = 'student'");
-    const [[{ totalTrainers }]]  = await db.query("SELECT COUNT(*) AS totalTrainers FROM User WHERE lmsRole = 'trainer'");
+    const [[{ totalUsers }]]     = await db.query('SELECT COUNT(*) AS totalUsers FROM lms_users');
+    const [[{ totalStudents }]]  = await db.query("SELECT COUNT(*) AS totalStudents FROM lms_users WHERE role = 'student'");
+    const [[{ totalTrainers }]]  = await db.query("SELECT COUNT(*) AS totalTrainers FROM lms_users WHERE role = 'trainer'");
     const [[{ totalNotes }]]     = await db.query('SELECT COUNT(*) AS totalNotes FROM lms_notes');
     const [[{ totalVideos }]]    = await db.query('SELECT COUNT(*) AS totalVideos FROM lms_videos');
     const [[{ totalQuizzes }]]   = await db.query('SELECT COUNT(*) AS totalQuizzes FROM lms_quizzes');
