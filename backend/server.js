@@ -78,11 +78,7 @@ app.use('/api/quizzes',    lmsQuizRoutes);
 app.use('/api/flashcards', lmsFlashcardRoutes);
 app.use('/api/admin',      lmsAdminRoutes);
 
-// ─── Root redirect → /transferred (TezSend app) ─────────────────────────────
-// tezsend.com → tezsend.com/transferred
-app.get('/', (req, res) => {
-  res.redirect(301, '/transferred');
-});
+
 
 // ─── Dual Frontend Serving ────────────────────────────────────────────────────
 // /transferred/* → web/dist   (TezSend payment app)
