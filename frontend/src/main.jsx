@@ -1,7 +1,7 @@
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import './index.css';
+import './styles/index.css';
 import App from './App.jsx';
 
 // Same Google Client ID as TezSend — one Google app for both
