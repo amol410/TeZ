@@ -61,6 +61,12 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'TezSend API is running' });
 });
 
+// ─── Root redirect → /transferred ───────────────────────────────────────────
+// tezsend.com → tezsend.com/transferred
+app.get('/', (req, res) => {
+  res.redirect(301, '/transferred');
+});
+
 // ─── Dynamic Frontend Resolution & Serving ───────────────────────────────────
 function getIndexPath() {
   const candidates = [
