@@ -63,35 +63,41 @@ export default function Login() {
 
           <form onSubmit={handleEmailLogin} className="space-y-4 mb-6">
             <div>
-              <label className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">Email Address</label>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">Email Address</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                   <Mail className="h-5 w-5 text-gray-500" />
                 </div>
                 <input
+                  id="email"
+                  name="email"
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="input-field pl-10"
                   placeholder="name@example.com"
+                  autoComplete="email"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">Password</label>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">Password</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                   <Lock className="h-5 w-5 text-gray-500" />
                 </div>
                 <input
+                  id="password"
+                  name="password"
                   type="password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="input-field pl-10"
                   placeholder="••••••••"
+                  autoComplete="current-password"
                 />
               </div>
             </div>
