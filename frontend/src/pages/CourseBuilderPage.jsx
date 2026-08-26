@@ -49,10 +49,10 @@ export default function CourseBuilderPage() {
         api.get('/flashcards')
       ]);
       setResources({
-        videos: vRes.data.success ? vRes.data.videos : [],
-        notes: nRes.data.success ? nRes.data.notes : [],
-        quizzes: qRes.data.success ? qRes.data.quizzes : [],
-        flashcards: fRes.data.success ? fRes.data.flashcards : []
+        videos: vRes.data.success ? (vRes.data.videos || []) : [],
+        notes: nRes.data.success ? (nRes.data.notes || []) : [],
+        quizzes: qRes.data.success ? (qRes.data.quizzes || []) : [],
+        flashcards: fRes.data.success ? (fRes.data.flashcards || fRes.data.decks || []) : []
       });
     } catch (err) {
       console.error('Failed to load resources');
