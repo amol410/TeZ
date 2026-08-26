@@ -1,7 +1,7 @@
 const { Router } = require('express');
 const multer  = require('multer');
 const mammoth = require('mammoth');
-const db = require('../db');
+const db = require('../../db');
 const { protect, authorize } = require('../middleware/lmsAuth');
 
 const router  = Router();
