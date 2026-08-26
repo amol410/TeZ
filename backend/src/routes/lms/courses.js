@@ -16,7 +16,19 @@ router.get('/', protect, async (req, res) => {
        WHERE c.isPublished = 1 
        ORDER BY c.createdAt DESC`
     );
-    res.json({ success: true, courses });
+
+    const [enrollments] = await db.query(
+      `SELECT courseId FROM lms_enrollments WHERE studentId = ? AND status = 'active'`,
+      [req.user.id]
+    );
+    const enrolledCourseIds = new Set(enrollments.map(e => e.courseId));
+
+    const coursesWithAccess = courses.map(c => ({
+      ...c,
+      hasAccess: enrolledCourseIds.has(c.id) || c.instructorId === req.user.id || req.user.role === 'admin'
+    }));
+
+    res.json({ success: true, courses: coursesWithAccess });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -271,6 +283,36 @@ router.delete('/:id', protect, authorize('trainer', 'admin'), async (req, res) =
     }
 
     await db.query(`DELETE FROM lms_courses WHERE id = ?`, [req.params.id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Delete Module
+router.delete('/:courseId/modules/:moduleId', protect, authorize('trainer', 'admin'), async (req, res) => {
+  try {
+    const [courses] = await db.query(`SELECT instructorId FROM lms_courses WHERE id = ?`, [req.params.courseId]);
+    if (!courses.length) return res.status(404).json({ success: false, message: 'Course not found' });
+    if (courses[0].instructorId !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Unauthorized' });
+    }
+    await db.query(`DELETE FROM lms_course_modules WHERE id = ? AND courseId = ?`, [req.params.moduleId, req.params.courseId]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Delete Item from Module
+router.delete('/:courseId/modules/:moduleId/items/:itemId', protect, authorize('trainer', 'admin'), async (req, res) => {
+  try {
+    const [courses] = await db.query(`SELECT instructorId FROM lms_courses WHERE id = ?`, [req.params.courseId]);
+    if (!courses.length) return res.status(404).json({ success: false, message: 'Course not found' });
+    if (courses[0].instructorId !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Unauthorized' });
+    }
+    await db.query(`DELETE FROM lms_course_items WHERE id = ? AND moduleId = ?`, [req.params.itemId, req.params.moduleId]);
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

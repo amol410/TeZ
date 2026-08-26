@@ -109,16 +109,25 @@ export default function BrowseCoursesPage() {
                   </div>
 
                   <div className="mt-auto pt-4 border-t border-white/5 flex gap-2">
-                    <button
-                      onClick={() => inCart ? navigate('/cart') : addToCart(course)}
-                      className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                        inCart 
-                          ? 'bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500/20' 
-                          : 'bg-white text-gray-900 hover:bg-gray-100'
-                      }`}
-                    >
-                      {inCart ? <><Check className="w-4 h-4" /> In Cart</> : <><ShoppingCart className="w-4 h-4" /> Add to Cart</>}
-                    </button>
+                    {course.hasAccess ? (
+                      <button
+                        onClick={() => navigate(`/courses/${course.id}/learn`)}
+                        className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold transition-all duration-200 bg-indigo-500 hover:bg-indigo-600 text-white"
+                      >
+                        Go to Course
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => inCart ? navigate('/cart') : addToCart(course)}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                          inCart 
+                            ? 'bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500/20' 
+                            : 'bg-white text-gray-900 hover:bg-gray-100'
+                        }`}
+                      >
+                        {inCart ? <><Check className="w-4 h-4" /> In Cart</> : <><ShoppingCart className="w-4 h-4" /> Add to Cart</>}
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

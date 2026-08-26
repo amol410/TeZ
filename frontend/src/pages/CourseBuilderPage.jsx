@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
-import { BookOpen, Plus, Save, ArrowLeft, Trash2, Video, FileText, Brain, Layers } from 'lucide-react';
+import { BookOpen, Plus, Save, ArrowLeft, Trash2, Video, FileText, Brain, Layers, Edit3 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function CourseBuilderPage() {
@@ -119,6 +119,45 @@ export default function CourseBuilderPage() {
     }
   };
 
+  const deleteModule = async (moduleId) => {
+    if (!window.confirm('Are you sure you want to delete this section?')) return;
+    try {
+      const { data } = await api.delete(`/courses/${id}/modules/${moduleId}`);
+      if (data.success) {
+        setModules(modules.filter(m => m.id !== moduleId));
+        toast.success('Section deleted');
+      }
+    } catch (err) {
+      toast.error('Failed to delete section');
+    }
+  };
+
+  const deleteItemFromModule = async (moduleId, itemId) => {
+    if (!window.confirm('Are you sure you want to remove this item?')) return;
+    try {
+      const { data } = await api.delete(`/courses/${id}/modules/${moduleId}/items/${itemId}`);
+      if (data.success) {
+        const newModules = [...modules];
+        const modIndex = newModules.findIndex(m => m.id === moduleId);
+        newModules[modIndex].items = newModules[modIndex].items.filter(i => i.id !== itemId);
+        setModules(newModules);
+        toast.success('Item removed');
+      }
+    } catch (err) {
+      toast.error('Failed to remove item');
+    }
+  };
+
+  const getItemEditLink = (itemType, itemId) => {
+    switch (itemType) {
+      case 'video': return `/videos/${itemId}/edit`;
+      case 'note': return `/notes/${itemId}/edit`;
+      case 'quiz': return `/quizzes/${itemId}/edit`;
+      case 'flashcard': return `/flashcards/${itemId}/edit`;
+      default: return '#';
+    }
+  };
+
   if (loading) return <div className="p-8 text-white">Loading...</div>;
 
   return (
@@ -178,19 +217,31 @@ export default function CourseBuilderPage() {
             <div key={mod.id} className="glass-card overflow-hidden">
               <div className="bg-white/5 px-5 py-4 border-b border-white/10 flex justify-between items-center">
                 <h3 className="font-bold text-white">Section {mIndex + 1}: {mod.title}</h3>
+                <button onClick={() => deleteModule(mod.id)} className="text-gray-500 hover:text-red-400 p-1">
+                  <Trash2 className="w-4 h-4" />
+                </button>
               </div>
               
               <div className="p-5">
                 {mod.items?.length > 0 ? (
                   <div className="space-y-2 mb-4">
                     {mod.items.map((item, i) => (
-                      <div key={item.id} className="flex items-center gap-3 bg-black/20 p-3 rounded-lg border border-white/5">
+                      <div key={item.id} className="flex items-center gap-3 bg-black/20 p-3 rounded-lg border border-white/5 group">
                         <span className="text-gray-500 text-sm font-medium w-4">{i + 1}.</span>
                         {item.itemType === 'video' && <Video className="w-4 h-4 text-red-400" />}
                         {item.itemType === 'note' && <FileText className="w-4 h-4 text-blue-400" />}
                         {item.itemType === 'quiz' && <Brain className="w-4 h-4 text-purple-400" />}
                         {item.itemType === 'flashcard' && <Layers className="w-4 h-4 text-green-400" />}
                         <span className="text-white flex-1">{item.details?.title || item.details?.deckName || `Unknown ${item.itemType}`}</span>
+                        
+                        <div className="opacity-0 group-hover:opacity-100 flex items-center gap-2 transition-opacity">
+                          <button onClick={() => window.open(getItemEditLink(item.itemType, item.itemId), '_blank')} className="p-1.5 text-gray-400 hover:text-indigo-400 hover:bg-white/10 rounded-lg transition-colors" title="Edit Item">
+                            <Edit3 className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => deleteItemFromModule(mod.id, item.id)} className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-white/10 rounded-lg transition-colors" title="Remove from Course">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
