@@ -204,7 +204,8 @@ export default function CourseBuilderPage() {
             />
           </div>
           <div className="col-span-2">
-            <label className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">Thumbnail URL</label>
+            <label className="block text-sm font-medium text-gray-400 mb-1 ml-1">Thumbnail URL</label>
+            <p className="text-xs text-gray-500 mb-2 ml-1">Recommended size: 1280x720. For best performance, upload your image to a free host like Imgur or Cloudinary and paste the Direct Link here.</p>
             <input type="url" value={course.thumbnailUrl} onChange={e => setCourse({...course, thumbnailUrl: e.target.value})} className="input-field" placeholder="https://..." />
           </div>
         </div>
