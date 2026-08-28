@@ -59,7 +59,7 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/" element={user ? <Navigate to="/dashboard" /> : <Landing />} />
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
       <Route path="/register" element={user ? <Navigate to="/dashboard" /> : <Register />} />
 
@@ -70,7 +70,7 @@ function AppRoutes() {
       <Route path="/privacy" element={<Layout><PrivacyPolicy /></Layout>} />
       <Route path="/refund-policy" element={<Layout><RefundPolicy /></Layout>} />
 
-      <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
+      <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
 
       <Route path="/notes" element={<ProtectedRoute><Layout><NotesPage /></Layout></ProtectedRoute>} />
       <Route path="/notes/new" element={<ProtectedRoute roles={['trainer', 'admin']}><Layout><NoteEditorPage /></Layout></ProtectedRoute>} />

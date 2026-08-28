@@ -17,6 +17,10 @@ export default function Dashboard() {
 
   useEffect(() => {
     const fetchStats = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
       try {
         const fetchPromises = isStaff ? [
           api.get('/notes?limit=3'),
@@ -88,16 +92,20 @@ export default function Dashboard() {
       <div className="glass-card p-6 mb-8 bg-gradient-to-r from-dolphin-600/10 to-ocean-600/10 border border-dolphin-500/20 gradient-border">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-dolphin-500 to-ocean-500 flex items-center justify-center text-white text-2xl font-black shadow-xl shadow-dolphin-900/40 flex-shrink-0">
-            {user?.name?.charAt(0).toUpperCase()}
+            {user ? user?.name?.charAt(0).toUpperCase() : '🚀'}
           </div>
           <div className="flex-1">
             <p className="text-gray-400 text-sm mb-1">{greeting} 👋</p>
             <h1 className="text-3xl font-black text-white">
-              Welcome back, <span className="gradient-text">{user?.name?.split(' ')[0]}!</span>
+              {user ? (
+                <>Welcome back, <span className="gradient-text">{user?.name?.split(' ')[0]}!</span></>
+              ) : (
+                <>Welcome to <span className="gradient-text">TezSend!</span></>
+              )}
             </h1>
             <p className="text-gray-500 text-sm mt-1 capitalize flex items-center gap-2">
               <Zap className="w-3.5 h-3.5 text-dolphin-500" />
-              {user?.role} • TezSend LMS
+              {user ? `${user?.role} • ` : ''}TezSend LMS
             </p>
           </div>
           <div className="hidden md:flex items-center gap-2 text-orange-400">

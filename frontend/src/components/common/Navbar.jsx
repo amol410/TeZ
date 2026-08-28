@@ -94,52 +94,62 @@ export default function Navbar() {
                 )}
               </Link>
               
-              <div className="relative">
-                <button
-                  onClick={() => setProfileOpen(!profileOpen)}
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/8 transition-all duration-200 group"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-dolphin-500 to-ocean-500 flex items-center justify-center text-white text-sm font-bold shadow-md">
-                    {user?.name?.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="text-left">
-                    <p className="text-white text-sm font-medium leading-none">{user?.name?.split(' ')[0]}</p>
-                    <p className="text-gray-500 text-xs capitalize">{user?.role}</p>
-                  </div>
-                  <ChevronDown className={clsx('w-4 h-4 text-gray-500 transition-transform duration-200', profileOpen && 'rotate-180')} />
-                </button>
+              {user ? (
+                <div className="relative">
+                  <button
+                    onClick={() => setProfileOpen(!profileOpen)}
+                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/8 transition-all duration-200 group"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-dolphin-500 to-ocean-500 flex items-center justify-center text-white text-sm font-bold shadow-md">
+                      {user?.name?.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="text-left">
+                      <p className="text-white text-sm font-medium leading-none">{user?.name?.split(' ')[0]}</p>
+                      <p className="text-gray-500 text-xs capitalize">{user?.role}</p>
+                    </div>
+                    <ChevronDown className={clsx('w-4 h-4 text-gray-500 transition-transform duration-200', profileOpen && 'rotate-180')} />
+                  </button>
 
-                {profileOpen && (
-                  <div className="absolute right-0 mt-2 w-52 glass-card border border-white/15 rounded-xl shadow-2xl overflow-hidden animate-fade-in">
-                    <Link
-                      to="/profile"
-                      className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:text-white hover:bg-white/8 transition-colors text-sm"
-                      onClick={() => setProfileOpen(false)}
-                    >
-                      <User className="w-4 h-4" />
-                      Profile Settings
-                    </Link>
-                    {user?.role === 'admin' && (
+                  {profileOpen && (
+                    <div className="absolute right-0 mt-2 w-52 glass-card border border-white/15 rounded-xl shadow-2xl overflow-hidden animate-fade-in">
                       <Link
-                        to="/admin"
-                        className="flex items-center gap-3 px-4 py-3 text-orange-400 hover:text-orange-300 hover:bg-orange-500/10 transition-colors text-sm"
+                        to="/profile"
+                        className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:text-white hover:bg-white/8 transition-colors text-sm"
                         onClick={() => setProfileOpen(false)}
                       >
-                        <ShieldCheck className="w-4 h-4" />
-                        Admin Panel
+                        <User className="w-4 h-4" />
+                        Profile Settings
                       </Link>
-                    )}
-                    <div className="border-t border-white/10" />
-                    <button
-                      onClick={handleLogout}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors text-sm"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      Sign Out
-                    </button>
-                  </div>
-                )}
-              </div>
+                      {user?.role === 'admin' && (
+                        <Link
+                          to="/admin"
+                          className="flex items-center gap-3 px-4 py-3 text-orange-400 hover:text-orange-300 hover:bg-orange-500/10 transition-colors text-sm"
+                          onClick={() => setProfileOpen(false)}
+                        >
+                          <ShieldCheck className="w-4 h-4" />
+                          Admin Panel
+                        </Link>
+                      )}
+                      <div className="border-t border-white/10" />
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors text-sm"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Sign Out
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Link
+                  to="/login"
+                  className="ml-2 px-4 py-2 bg-gradient-to-r from-dolphin-500 to-ocean-500 hover:from-dolphin-600 hover:to-ocean-600 text-white text-sm font-semibold rounded-xl transition-all shadow-md shadow-dolphin-500/20 flex items-center gap-2"
+                >
+                  <User className="w-4 h-4" />
+                  Login
+                </Link>
+              )}
             </div>
 
             {/* Mobile menu button */}
@@ -208,24 +218,37 @@ export default function Navbar() {
                 </span>
               )}
             </NavLink>
-            <div className="border-t border-white/10 pt-3 mt-3">
-              <div className="flex items-center gap-3 px-3 py-2 mb-2">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-dolphin-500 to-ocean-500 flex items-center justify-center text-white text-sm font-bold">
-                  {user?.name?.charAt(0).toUpperCase()}
+            {user ? (
+              <div className="border-t border-white/10 pt-3 mt-3">
+                <div className="flex items-center gap-3 px-3 py-2 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-dolphin-500 to-ocean-500 flex items-center justify-center text-white text-sm font-bold">
+                    {user?.name?.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="text-white text-sm font-medium">{user?.name}</p>
+                    <p className="text-gray-500 text-xs capitalize">{user?.role}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-white text-sm font-medium">{user?.name}</p>
-                  <p className="text-gray-500 text-xs capitalize">{user?.role}</p>
-                </div>
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-400 hover:bg-red-500/10 text-sm font-medium transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Sign Out
+                </button>
               </div>
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-400 hover:bg-red-500/10 text-sm font-medium transition-colors"
-              >
-                <LogOut className="w-4 h-4" />
-                Sign Out
-              </button>
-            </div>
+            ) : (
+              <div className="border-t border-white/10 pt-3 mt-3">
+                <Link
+                  to="/login"
+                  onClick={() => setMobileOpen(false)}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-gradient-to-r from-dolphin-500 to-ocean-500 text-white text-sm font-medium transition-colors"
+                >
+                  <User className="w-4 h-4" />
+                  Login to Continue
+                </Link>
+              </div>
+            )}
           </div>
         )}
       </div>
