@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
+import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import { BookOpen, Video, FileText, Layers, Brain, Check, ShoppingCart, Lock, ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -8,6 +9,7 @@ import toast from 'react-hot-toast';
 export default function CourseDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { cart, addToCart } = useCart();
   
   const [course, setCourse] = useState(null);
@@ -129,12 +131,22 @@ export default function CourseDetailsPage() {
               </div>
 
               {course.hasAccess ? (
-                <button
-                  onClick={() => navigate(`/courses/${course.id}/learn`)}
-                  className="btn-primary w-full flex justify-center py-3 text-base"
-                >
-                  Go to Course
-                </button>
+                <div className="space-y-3">
+                  <button
+                    onClick={() => navigate(`/courses/${course.id}/learn`)}
+                    className="btn-primary w-full flex justify-center py-3 text-base"
+                  >
+                    Go to Course
+                  </button>
+                  {(user?.role === 'admin' || user?.id === course.instructorId) && (
+                    <button
+                      onClick={() => navigate(`/courses/${course.id}/edit`)}
+                      className="btn-secondary w-full flex justify-center py-3 text-base"
+                    >
+                      Edit Course
+                    </button>
+                  )}
+                </div>
               ) : (
                 <div className="space-y-3">
                   <button

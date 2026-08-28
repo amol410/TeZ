@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
+import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import { BookOpen, Search, ArrowRight, ShoppingCart, Check, Star } from 'lucide-react';
 
@@ -8,6 +9,7 @@ export default function BrowseCoursesPage() {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const { user } = useAuth();
   const { cart, addToCart } = useCart();
   const navigate = useNavigate();
 
@@ -110,12 +112,22 @@ export default function BrowseCoursesPage() {
 
                   <div className="mt-auto pt-4 border-t border-white/5 flex gap-2">
                     {course.hasAccess ? (
-                      <button
-                        onClick={() => navigate(`/courses/${course.id}/learn`)}
-                        className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold transition-all duration-200 bg-indigo-500 hover:bg-indigo-600 text-white"
-                      >
-                        Go to Course
-                      </button>
+                      <>
+                        <button
+                          onClick={() => navigate(`/courses/${course.id}/learn`)}
+                          className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold transition-all duration-200 bg-indigo-500 hover:bg-indigo-600 text-white"
+                        >
+                          Go to Course
+                        </button>
+                        {(user?.role === 'admin' || user?.id === course.instructorId) && (
+                          <button
+                            onClick={() => navigate(`/courses/${course.id}/edit`)}
+                            className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold transition-all duration-200 bg-gray-700 hover:bg-gray-600 text-white"
+                          >
+                            Edit
+                          </button>
+                        )}
+                      </>
                     ) : (
                       <button
                         onClick={() => inCart ? navigate('/cart') : addToCart(course)}
