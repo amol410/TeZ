@@ -191,7 +191,7 @@ export default function CourseBuilderPage() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">Price ($)</label>
+            <label className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">Price (₹)</label>
             <input 
               required 
               type="number" 

@@ -87,7 +87,7 @@ export default function BrowseCoursesPage() {
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
                   <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10">
-                    <span className="text-white font-bold">${Number(course.price).toFixed(2)}</span>
+                    <span className="text-white font-bold">₹{Number(course.price).toFixed(2)}</span>
                   </div>
                 </div>
 

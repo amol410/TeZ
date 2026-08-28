@@ -125,7 +125,7 @@ export default function CourseDetailsPage() {
             
             <div className="p-6">
               <div className="text-3xl font-black text-white mb-6">
-                ${Number(course.price).toFixed(2)}
+                ₹{Number(course.price).toFixed(2)}
               </div>
 
               {course.hasAccess ? (

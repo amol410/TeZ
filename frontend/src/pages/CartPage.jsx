@@ -87,7 +87,7 @@ export default function CartPage() {
               
               <div className="text-right">
                 <div className="text-xl font-bold text-indigo-400">
-                  ${Number(course.price).toFixed(2)}
+                  ₹{Number(course.price).toFixed(2)}
                 </div>
               </div>
             </div>
@@ -99,7 +99,7 @@ export default function CartPage() {
           <div className="glass-card p-6 border border-white/10 sticky top-28">
             <h2 className="text-xl font-bold text-white mb-6">Total:</h2>
             <div className="text-4xl font-black text-white mb-6">
-              ${cartTotal.toFixed(2)}
+              ₹{cartTotal.toFixed(2)}
             </div>
             
             <button
