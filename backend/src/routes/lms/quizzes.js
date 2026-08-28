@@ -2,7 +2,7 @@ const { Router } = require('express');
 const multer  = require('multer');
 const mammoth = require('mammoth');
 const db = require('../../db');
-const { protect, authorize } = require('../../middleware/lmsAuth');
+const { protect, optionalProtect, authorize } = require('../../middleware/lmsAuth');
 
 const router  = Router();
 const upload  = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
@@ -32,7 +32,7 @@ const stripAnswers = (quiz) => ({
 });
 
 // ─── GET /api/quizzes ────────────────────────────────────────────────────────
-router.get('/', async (req, res) => {
+router.get('/', optionalProtect, async (req, res) => {
   try {
     const { q, tag, page = 1, limit = 12, subject, topic } = req.query;
     const offset = (parseInt(page) - 1) * parseInt(limit);
@@ -67,7 +67,7 @@ router.get('/', async (req, res) => {
 });
 
 // ─── GET /api/quizzes/:id ────────────────────────────────────────────────────
-router.get('/:id', protect, async (req, res) => {
+router.get('/:id', optionalProtect, async (req, res) => {
   try {
     const [rows] = await db.query(
       `SELECT q.*, u.name AS createdByName, u.avatar AS createdByAvatar, s.name AS subjectName
@@ -80,7 +80,7 @@ router.get('/:id', protect, async (req, res) => {
     if (!rows.length) return res.status(404).json({ success: false, message: 'Quiz not found' });
 
     const quiz = formatQuiz(rows[0]);
-    const isOwner = quiz.createdBy?.id === req.user.id || quiz.createdBy === req.user.id;
+    const isOwner = req.user && (quiz.createdBy?.id === req.user.id || quiz.createdBy === req.user.id);
     res.json({ success: true, quiz: isOwner ? quiz : stripAnswers(quiz) });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });

@@ -2,7 +2,7 @@ const { Router } = require('express');
 const multer  = require('multer');
 const mammoth = require('mammoth');
 const db = require('../../db');
-const { protect, authorize } = require('../../middleware/lmsAuth');
+const { protect, optionalProtect, authorize } = require('../../middleware/lmsAuth');
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
@@ -17,16 +17,19 @@ const formatNote = (row) => ({
   subject: row.subjectId ? { id: row.subjectId, name: row.subjectName } : null,
 });
 
-router.use(protect);
-
 // ─── GET /api/notes ──────────────────────────────────────────────────────────
-router.get('/', async (req, res) => {
+router.get('/', optionalProtect, async (req, res) => {
   try {
     const { q, tag, page = 1, limit = 12, subject, topic } = req.query;
     const offset = (parseInt(page) - 1) * parseInt(limit);
 
-    let where = req.user.role !== 'student' ? 'n.owner = ?' : '1=1';
-    const params = req.user.role !== 'student' ? [req.user.id] : [];
+    let where = '1=1';
+    const params = [];
+    
+    if (req.user && req.user.role !== 'student') {
+      where = 'n.owner = ?';
+      params.push(req.user.id);
+    }
 
     if (q) { where += ` AND (n.title LIKE ? OR n.content LIKE ?)`; params.push(`%${q}%`, `%${q}%`); }
     if (tag) { where += ` AND n.tags LIKE ?`; params.push(`%"${tag}"%`); }
@@ -57,7 +60,7 @@ router.get('/', async (req, res) => {
 });
 
 // ─── GET /api/notes/:id ──────────────────────────────────────────────────────
-router.get('/:id', async (req, res) => {
+router.get('/:id', optionalProtect, async (req, res) => {
   try {
     const [rows] = await db.query(
       `SELECT n.*, u.name AS ownerName, s.name AS subjectName
@@ -70,7 +73,7 @@ router.get('/:id', async (req, res) => {
     if (!rows.length) return res.status(404).json({ success: false, message: 'Note not found' });
 
     const note = rows[0];
-    if (req.user.role !== 'student' && note.owner !== req.user.id) {
+    if (req.user && req.user.role !== 'student' && note.owner !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
     res.json({ success: true, note: formatNote(note) });
@@ -78,7 +81,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // ─── POST /api/notes ─────────────────────────────────────────────────────────
-router.post('/', authorize('trainer', 'admin'), async (req, res) => {
+router.post('/', protect, authorize('trainer', 'admin'), async (req, res) => {
   try {
     const { title, content, tags = [], color = 'default', isPinned = false, contentType = 'richtext', subject, topic, moduleId } = req.body;
     const [result] = await db.query(
@@ -100,7 +103,7 @@ router.post('/', authorize('trainer', 'admin'), async (req, res) => {
 });
 
 // ─── POST /api/notes/upload ──────────────────────────────────────────────────
-router.post('/upload', authorize('trainer', 'admin'), upload.single('file'), async (req, res) => {
+router.post('/upload', protect, authorize('trainer', 'admin'), upload.single('file'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded' });
     const { title, tags, color, isPinned, noteId, subject, topic } = req.body;
@@ -151,7 +154,7 @@ router.post('/upload', authorize('trainer', 'admin'), upload.single('file'), asy
 });
 
 // ─── PUT /api/notes/:id ──────────────────────────────────────────────────────
-router.put('/:id', authorize('trainer', 'admin'), async (req, res) => {
+router.put('/:id', protect, authorize('trainer', 'admin'), async (req, res) => {
   try {
     const [rows] = await db.query('SELECT * FROM lms_notes WHERE id = ?', [req.params.id]);
     if (!rows.length) return res.status(404).json({ success: false, message: 'Note not found' });
@@ -178,7 +181,7 @@ router.put('/:id', authorize('trainer', 'admin'), async (req, res) => {
 });
 
 // ─── PATCH /api/notes/:id/pin ─────────────────────────────────────────────────
-router.patch('/:id/pin', authorize('trainer', 'admin'), async (req, res) => {
+router.patch('/:id/pin', protect, authorize('trainer', 'admin'), async (req, res) => {
   try {
     const [rows] = await db.query('SELECT * FROM lms_notes WHERE id = ?', [req.params.id]);
     if (!rows.length) return res.status(404).json({ success: false, message: 'Note not found' });
@@ -192,7 +195,7 @@ router.patch('/:id/pin', authorize('trainer', 'admin'), async (req, res) => {
 });
 
 // ─── DELETE /api/notes/:id ───────────────────────────────────────────────────
-router.delete('/:id', authorize('trainer', 'admin'), async (req, res) => {
+router.delete('/:id', protect, authorize('trainer', 'admin'), async (req, res) => {
   try {
     const [rows] = await db.query('SELECT * FROM lms_notes WHERE id = ?', [req.params.id]);
     if (!rows.length) return res.status(404).json({ success: false, message: 'Note not found' });

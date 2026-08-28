@@ -2,7 +2,7 @@ const { Router } = require('express');
 const multer  = require('multer');
 const mammoth = require('mammoth');
 const db = require('../../db');
-const { protect, authorize } = require('../../middleware/lmsAuth');
+const { protect, optionalProtect, authorize } = require('../../middleware/lmsAuth');
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
@@ -17,11 +17,9 @@ const formatDeck = (row) => ({
   owner: row.ownerName ? { id: row.owner, name: row.ownerName, avatar: row.ownerAvatar } : row.owner,
 });
 
-router.use(protect);
-
 // ─── POST /api/flashcards/bulk-upload ────────────────────────────────────────
 // (must be before /:id to avoid route conflict)
-router.post('/bulk-upload', authorize('trainer', 'admin'), upload.single('file'), async (req, res) => {
+router.post('/bulk-upload', protect, authorize('trainer', 'admin'), upload.single('file'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded' });
     const result = await mammoth.extractRawText({ buffer: req.file.buffer });
@@ -61,13 +59,17 @@ router.post('/bulk-upload', authorize('trainer', 'admin'), upload.single('file')
 });
 
 // ─── GET /api/flashcards ─────────────────────────────────────────────────────
-router.get('/', async (req, res) => {
+router.get('/', optionalProtect, async (req, res) => {
   try {
     const { q, page = 1, limit = 12 } = req.query;
     const offset = (parseInt(page) - 1) * parseInt(limit);
 
-    let where = `(f.owner = ? OR f.isPublic = 1)`;
-    const params = [req.user.id];
+    let where = 'f.isPublic = 1';
+    const params = [];
+    if (req.user) {
+      where = `(f.owner = ? OR f.isPublic = 1)`;
+      params.push(req.user.id);
+    }
 
     if (q) { where += ` AND (f.deckName LIKE ? OR f.description LIKE ?)`; params.push(`%${q}%`, `%${q}%`); }
 
@@ -88,7 +90,7 @@ router.get('/', async (req, res) => {
 });
 
 // ─── POST /api/flashcards ────────────────────────────────────────────────────
-router.post('/', authorize('trainer', 'admin'), async (req, res) => {
+router.post('/', protect, authorize('trainer', 'admin'), async (req, res) => {
   try {
     const { deckName, description = '', cards = [], color = 'default', isPublic = false, tags = [], moduleId } = req.body;
     if (!cards.length) return res.status(400).json({ success: false, message: 'At least one card is required' });
@@ -111,7 +113,7 @@ router.post('/', authorize('trainer', 'admin'), async (req, res) => {
 });
 
 // ─── GET /api/flashcards/:id ─────────────────────────────────────────────────
-router.get('/:id', async (req, res) => {
+router.get('/:id', optionalProtect, async (req, res) => {
   try {
     const [rows] = await db.query(
       `SELECT f.*, u.name AS ownerName, u.avatar AS ownerAvatar
@@ -120,13 +122,13 @@ router.get('/:id', async (req, res) => {
     );
     if (!rows.length) return res.status(404).json({ success: false, message: 'Deck not found' });
     const deck = formatDeck(rows[0]);
-    if (!deck.isPublic && rows[0].owner !== req.user.id) return res.status(403).json({ success: false, message: 'Not authorized' });
+    if (!deck.isPublic && (!req.user || rows[0].owner !== req.user.id)) return res.status(403).json({ success: false, message: 'Not authorized' });
     res.json({ success: true, deck });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
 // ─── PUT /api/flashcards/:id ─────────────────────────────────────────────────
-router.put('/:id', authorize('trainer', 'admin'), async (req, res) => {
+router.put('/:id', protect, authorize('trainer', 'admin'), async (req, res) => {
   try {
     const [rows] = await db.query('SELECT * FROM lms_flashcards WHERE id = ?', [req.params.id]);
     if (!rows.length) return res.status(404).json({ success: false, message: 'Deck not found' });
@@ -147,7 +149,7 @@ router.put('/:id', authorize('trainer', 'admin'), async (req, res) => {
 });
 
 // ─── DELETE /api/flashcards/:id ──────────────────────────────────────────────
-router.delete('/:id', authorize('trainer', 'admin'), async (req, res) => {
+router.delete('/:id', protect, authorize('trainer', 'admin'), async (req, res) => {
   try {
     const [rows] = await db.query('SELECT * FROM lms_flashcards WHERE id = ?', [req.params.id]);
     if (!rows.length) return res.status(404).json({ success: false, message: 'Deck not found' });
@@ -159,7 +161,7 @@ router.delete('/:id', authorize('trainer', 'admin'), async (req, res) => {
 });
 
 // ─── POST /api/flashcards/:id/cards ─────────────────────────────────────────
-router.post('/:id/cards', authorize('trainer', 'admin'), async (req, res) => {
+router.post('/:id/cards', protect, authorize('trainer', 'admin'), async (req, res) => {
   try {
     const [rows] = await db.query('SELECT * FROM lms_flashcards WHERE id = ?', [req.params.id]);
     if (!rows.length) return res.status(404).json({ success: false, message: 'Deck not found' });
@@ -173,7 +175,7 @@ router.post('/:id/cards', authorize('trainer', 'admin'), async (req, res) => {
 });
 
 // ─── DELETE /api/flashcards/:id/cards/:cardId ────────────────────────────────
-router.delete('/:id/cards/:cardId', authorize('trainer', 'admin'), async (req, res) => {
+router.delete('/:id/cards/:cardId', protect, authorize('trainer', 'admin'), async (req, res) => {
   try {
     const [rows] = await db.query('SELECT * FROM lms_flashcards WHERE id = ?', [req.params.id]);
     if (!rows.length) return res.status(404).json({ success: false, message: 'Deck not found' });
@@ -187,7 +189,7 @@ router.delete('/:id/cards/:cardId', authorize('trainer', 'admin'), async (req, r
 });
 
 // ─── GET /api/flashcards/:id/progress ───────────────────────────────────────
-router.get('/:id/progress', async (req, res) => {
+router.get('/:id/progress', protect, async (req, res) => {
   try {
     const [rows] = await db.query(
       'SELECT * FROM lms_flashcard_progress WHERE student = ? AND flashcard = ?',
@@ -201,7 +203,7 @@ router.get('/:id/progress', async (req, res) => {
 });
 
 // ─── POST /api/flashcards/:id/progress ──────────────────────────────────────
-router.post('/:id/progress', async (req, res) => {
+router.post('/:id/progress', protect, async (req, res) => {
   try {
     const { cardResults } = req.body;
     const masteredCount = cardResults.filter(r => r.status === 'known').length;
