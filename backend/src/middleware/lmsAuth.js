@@ -38,6 +38,38 @@ const protect = async (req, res, next) => {
   }
 };
 
+// ─── optionalProtect ─────────────────────────────────────────────────────────────
+// Populates req.user if a valid token exists, otherwise sets req.user to null and proceeds
+const optionalProtect = async (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) {
+    req.user = null;
+    return next();
+  }
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    if (!decoded.lmsUserId) {
+      req.user = null;
+      return next();
+    }
+
+    const [rows] = await db.query(
+      'SELECT id, name, email, avatar, role, isActive FROM lms_users WHERE id = ? LIMIT 1',
+      [decoded.lmsUserId]
+    );
+
+    if (!rows.length || !rows[0].isActive) {
+      req.user = null;
+    } else {
+      req.user = rows[0];
+    }
+  } catch (err) {
+    req.user = null;
+  }
+  next();
+};
+
 // ─── authorize ────────────────────────────────────────────────────────────────
 // Usage: authorize('trainer', 'admin')
 const authorize = (...roles) => (req, res, next) => {
@@ -50,4 +82,4 @@ const authorize = (...roles) => (req, res, next) => {
   next();
 };
 
-module.exports = { protect, authorize };
+module.exports = { protect, optionalProtect, authorize };

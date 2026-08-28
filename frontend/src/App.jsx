@@ -72,33 +72,33 @@ function AppRoutes() {
 
       <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
 
-      <Route path="/notes" element={<ProtectedRoute><Layout><NotesPage /></Layout></ProtectedRoute>} />
+      <Route path="/notes" element={<Layout><NotesPage /></Layout>} />
       <Route path="/notes/new" element={<ProtectedRoute roles={['trainer', 'admin']}><Layout><NoteEditorPage /></Layout></ProtectedRoute>} />
-      <Route path="/notes/:id" element={<ProtectedRoute><Layout><NoteDetailPage /></Layout></ProtectedRoute>} />
+      <Route path="/notes/:id" element={<Layout><NoteDetailPage /></Layout>} />
       <Route path="/notes/:id/edit" element={<ProtectedRoute roles={['trainer', 'admin']}><Layout><NoteEditorPage /></Layout></ProtectedRoute>} />
 
-      <Route path="/videos" element={<ProtectedRoute><Layout><VideosPage /></Layout></ProtectedRoute>} />
+      <Route path="/videos" element={<Layout><VideosPage /></Layout>} />
       <Route path="/videos/new" element={<ProtectedRoute roles={['trainer', 'admin']}><Layout><VideoFormPage /></Layout></ProtectedRoute>} />
-      <Route path="/videos/:id" element={<ProtectedRoute><Layout><VideoDetailPage /></Layout></ProtectedRoute>} />
+      <Route path="/videos/:id" element={<Layout><VideoDetailPage /></Layout>} />
       <Route path="/videos/:id/edit" element={<ProtectedRoute roles={['trainer', 'admin']}><Layout><VideoFormPage /></Layout></ProtectedRoute>} />
 
-      <Route path="/quizzes" element={<ProtectedRoute><Layout><QuizzesPage /></Layout></ProtectedRoute>} />
+      <Route path="/quizzes" element={<Layout><QuizzesPage /></Layout>} />
       <Route path="/quizzes/new" element={<ProtectedRoute roles={['trainer', 'admin']}><Layout><QuizFormPage /></Layout></ProtectedRoute>} />
       <Route path="/quizzes/:id/edit" element={<ProtectedRoute roles={['trainer', 'admin']}><Layout><QuizFormPage /></Layout></ProtectedRoute>} />
-      <Route path="/quizzes/:id/take" element={<ProtectedRoute><Layout><QuizTakePage /></Layout></ProtectedRoute>} />
+      <Route path="/quizzes/:id/take" element={<Layout><QuizTakePage /></Layout>} />
 
-      <Route path="/flashcards" element={<ProtectedRoute><Layout><FlashcardsPage /></Layout></ProtectedRoute>} />
+      <Route path="/flashcards" element={<Layout><FlashcardsPage /></Layout>} />
       <Route path="/flashcards/new" element={<ProtectedRoute roles={['trainer', 'admin']}><Layout><FlashcardFormPage /></Layout></ProtectedRoute>} />
       <Route path="/flashcards/:id/edit" element={<ProtectedRoute roles={['trainer', 'admin']}><Layout><FlashcardFormPage /></Layout></ProtectedRoute>} />
-      <Route path="/flashcards/:id/study" element={<ProtectedRoute><Layout><StudyPage /></Layout></ProtectedRoute>} />
+      <Route path="/flashcards/:id/study" element={<Layout><StudyPage /></Layout>} />
 
-      <Route path="/courses" element={<ProtectedRoute><Layout><BrowseCoursesPage /></Layout></ProtectedRoute>} />
+      <Route path="/courses" element={<Layout><BrowseCoursesPage /></Layout>} />
       <Route path="/courses/my" element={<ProtectedRoute><Layout><MyCoursesPage /></Layout></ProtectedRoute>} />
       <Route path="/courses/manage" element={<ProtectedRoute roles={['trainer', 'admin']}><Layout><CourseManagementPage /></Layout></ProtectedRoute>} />
       <Route path="/courses/new" element={<ProtectedRoute roles={['trainer', 'admin']}><Layout><CourseBuilderPage /></Layout></ProtectedRoute>} />
-      <Route path="/courses/:id" element={<ProtectedRoute><Layout><CourseDetailsPage /></Layout></ProtectedRoute>} />
+      <Route path="/courses/:id" element={<Layout><CourseDetailsPage /></Layout>} />
       <Route path="/courses/:id/edit" element={<ProtectedRoute roles={['trainer', 'admin']}><Layout><CourseBuilderPage /></Layout></ProtectedRoute>} />
-      <Route path="/courses/:id/learn" element={<ProtectedRoute><Layout><CoursePlayerPage /></Layout></ProtectedRoute>} />
+      <Route path="/courses/:id/learn" element={<Layout><CoursePlayerPage /></Layout>} />
       
       <Route path="/cart" element={<ProtectedRoute><Layout><CartPage /></Layout></ProtectedRoute>} />
 

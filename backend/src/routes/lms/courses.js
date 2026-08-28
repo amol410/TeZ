@@ -1,13 +1,13 @@
 const { Router } = require('express');
 const db = require('../../db');
-const { protect, authorize } = require('../../middleware/lmsAuth');
+const { protect, optionalProtect, authorize } = require('../../middleware/lmsAuth');
 
 const router = Router();
 
 // ─── PUBLIC/STUDENT ROUTES ───────────────────────────────────────────────────
 
 // Get all published courses (Storefront)
-router.get('/', protect, async (req, res) => {
+router.get('/', optionalProtect, async (req, res) => {
   try {
     const [courses] = await db.query(
       `SELECT c.*, u.name as instructorName 
@@ -17,15 +17,18 @@ router.get('/', protect, async (req, res) => {
        ORDER BY c.createdAt DESC`
     );
 
-    const [enrollments] = await db.query(
-      `SELECT courseId FROM lms_enrollments WHERE studentId = ? AND status = 'active'`,
-      [req.user.id]
-    );
-    const enrolledCourseIds = new Set(enrollments.map(e => e.courseId));
+    let enrolledCourseIds = new Set();
+    if (req.user) {
+      const [enrollments] = await db.query(
+        `SELECT courseId FROM lms_enrollments WHERE studentId = ? AND status = 'active'`,
+        [req.user.id]
+      );
+      enrolledCourseIds = new Set(enrollments.map(e => e.courseId));
+    }
 
     const coursesWithAccess = courses.map(c => ({
       ...c,
-      hasAccess: enrolledCourseIds.has(c.id) || c.instructorId === req.user.id || req.user.role === 'admin'
+      hasAccess: c.accessType === 'free-open' || enrolledCourseIds.has(c.id) || c.instructorId === req.user?.id || req.user?.role === 'admin'
     }));
 
     res.json({ success: true, courses: coursesWithAccess });
@@ -47,6 +50,71 @@ router.get('/my', protect, async (req, res) => {
       [req.user.id]
     );
     res.json({ success: true, courses });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Get free open course contents for dashboard
+router.get('/free/content', optionalProtect, async (req, res) => {
+  try {
+    const [courses] = await db.query(
+      `SELECT c.*, u.name as instructorName 
+       FROM lms_courses c 
+       JOIN lms_users u ON c.instructorId = u.id 
+       WHERE c.isPublished = 1 AND c.accessType = 'free-open'
+       ORDER BY c.createdAt DESC`
+    );
+
+    if (!courses.length) {
+      return res.json({ success: true, courses: [] });
+    }
+
+    const courseIds = courses.map(c => c.id);
+
+    // Fetch modules
+    const [modules] = await db.query(
+      `SELECT * FROM lms_course_modules WHERE courseId IN (?) ORDER BY orderIndex ASC`,
+      [courseIds]
+    );
+
+    let items = [];
+    if (modules.length > 0) {
+      const moduleIds = modules.map(m => m.id);
+      [items] = await db.query(
+        `SELECT * FROM lms_course_items WHERE moduleId IN (?) ORDER BY orderIndex ASC`,
+        [moduleIds]
+      );
+      
+      const videoIds = items.filter(i => i.itemType === 'video').map(i => i.itemId);
+      const noteIds = items.filter(i => i.itemType === 'note').map(i => i.itemId);
+      const quizIds = items.filter(i => i.itemType === 'quiz').map(i => i.itemId);
+      const flashcardIds = items.filter(i => i.itemType === 'flashcard').map(i => i.itemId);
+
+      const [videos] = videoIds.length ? await db.query(`SELECT id, title, youtubeVideoId FROM lms_videos WHERE id IN (?)`, [videoIds]) : [[]];
+      const [notes] = noteIds.length ? await db.query(`SELECT id, title FROM lms_notes WHERE id IN (?)`, [noteIds]) : [[]];
+      const [quizzes] = quizIds.length ? await db.query(`SELECT id, title FROM lms_quizzes WHERE id IN (?)`, [quizIds]) : [[]];
+      const [flashcards] = flashcardIds.length ? await db.query(`SELECT id, deckName as title FROM lms_flashcards WHERE id IN (?)`, [flashcardIds]) : [[]];
+
+      items = items.map(item => {
+        let details = null;
+        if (item.itemType === 'video') details = videos.find(v => v.id === item.itemId);
+        if (item.itemType === 'note') details = notes.find(n => n.id === item.itemId);
+        if (item.itemType === 'quiz') details = quizzes.find(q => q.id === item.itemId);
+        if (item.itemType === 'flashcard') details = flashcards.find(f => f.id === item.itemId);
+        return { ...item, details };
+      });
+    }
+
+    const coursesWithContent = courses.map(course => {
+      const courseModules = modules.filter(m => m.courseId === course.id).map(m => ({
+        ...m,
+        items: items.filter(i => i.moduleId === m.id)
+      }));
+      return { ...course, modules: courseModules };
+    });
+
+    res.json({ success: true, courses: coursesWithContent });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -86,7 +154,7 @@ router.post('/checkout', protect, async (req, res) => {
 });
 
 // Get course details (Includes full syllabus if enrolled or instructor)
-router.get('/:id', protect, async (req, res) => {
+router.get('/:id', optionalProtect, async (req, res) => {
   try {
     const [courses] = await db.query(
       `SELECT c.*, u.name as instructorName 
@@ -102,12 +170,12 @@ router.get('/:id', protect, async (req, res) => {
 
     const course = courses[0];
 
-    // Check if user has access (is instructor, admin, or enrolled)
-    const isInstructor = course.instructorId === req.user.id;
-    const isAdmin = req.user.role === 'admin';
+    // Check if user has access (is instructor, admin, or enrolled, or free-open)
+    const isInstructor = req.user && course.instructorId === req.user.id;
+    const isAdmin = req.user && req.user.role === 'admin';
     let isEnrolled = false;
     
-    if (!isInstructor && !isAdmin) {
+    if (req.user && !isInstructor && !isAdmin) {
       const [enrollments] = await db.query(
         `SELECT id FROM lms_enrollments WHERE studentId = ? AND courseId = ? AND status = 'active'`,
         [req.user.id, course.id]
@@ -115,7 +183,7 @@ router.get('/:id', protect, async (req, res) => {
       isEnrolled = enrollments.length > 0;
     }
 
-    const hasAccess = isInstructor || isAdmin || isEnrolled;
+    const hasAccess = isInstructor || isAdmin || isEnrolled || course.accessType === 'free-open';
     
     // Only fetch modules if published or if user is admin/instructor
     if (!course.isPublished && !isInstructor && !isAdmin) {
@@ -212,10 +280,10 @@ router.get('/manage/all', protect, authorize('trainer', 'admin'), async (req, re
 // Create course
 router.post('/', protect, authorize('trainer', 'admin'), async (req, res) => {
   try {
-    const { title, description, price, thumbnailUrl, isPublished } = req.body;
+    const { title, description, price, thumbnailUrl, isPublished, accessType } = req.body;
     const [result] = await db.query(
-      `INSERT INTO lms_courses (title, description, price, thumbnailUrl, instructorId, isPublished) VALUES (?, ?, ?, ?, ?, ?)`,
-      [title, description, price || 0, thumbnailUrl || null, req.user.id, isPublished ? 1 : 0]
+      `INSERT INTO lms_courses (title, description, price, thumbnailUrl, instructorId, isPublished, accessType) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [title, description, price || 0, thumbnailUrl || null, req.user.id, isPublished ? 1 : 0, accessType || 'paid']
     );
     res.json({ success: true, courseId: result.insertId });
   } catch (err) {
@@ -226,7 +294,7 @@ router.post('/', protect, authorize('trainer', 'admin'), async (req, res) => {
 // Update course
 router.put('/:id', protect, authorize('trainer', 'admin'), async (req, res) => {
   try {
-    const { title, description, price, thumbnailUrl, isPublished } = req.body;
+    const { title, description, price, thumbnailUrl, isPublished, accessType } = req.body;
     
     // Check ownership
     const [courses] = await db.query(`SELECT instructorId FROM lms_courses WHERE id = ?`, [req.params.id]);
@@ -236,8 +304,8 @@ router.put('/:id', protect, authorize('trainer', 'admin'), async (req, res) => {
     }
 
     await db.query(
-      `UPDATE lms_courses SET title=?, description=?, price=?, thumbnailUrl=?, isPublished=? WHERE id=?`,
-      [title, description, price, thumbnailUrl, isPublished ? 1 : 0, req.params.id]
+      `UPDATE lms_courses SET title=?, description=?, price=?, thumbnailUrl=?, isPublished=?, accessType=? WHERE id=?`,
+      [title, description, price, thumbnailUrl, isPublished ? 1 : 0, accessType || 'paid', req.params.id]
     );
     res.json({ success: true });
   } catch (err) {

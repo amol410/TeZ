@@ -11,6 +11,7 @@ export default function Dashboard() {
   const { user } = useAuth();
   const [stats, setStats] = useState({ notes: 0, videos: 0, quizzes: 0, flashcards: 0 });
   const [recentItems, setRecentItems] = useState([]);
+  const [freeOpenCourses, setFreeOpenCourses] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const isStaff = user?.role === 'trainer' || user?.role === 'admin';
@@ -18,6 +19,14 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       if (!user) {
+        try {
+          const { data } = await api.get('/courses/free/content');
+          if (data.success) {
+            setFreeOpenCourses(data.courses);
+          }
+        } catch (err) {
+          console.error(err);
+        }
         setLoading(false);
         return;
       }
@@ -48,6 +57,15 @@ export default function Dashboard() {
         if (videosRes.status === 'fulfilled') setStats(prev => ({ ...prev, videos: videosRes.value.data.pagination?.total || 0 }));
         if (quizzesRes.status === 'fulfilled') setStats(prev => ({ ...prev, quizzes: quizzesRes.value.data.pagination?.total || 0 }));
         if (flashcardsRes.status === 'fulfilled') setStats(prev => ({ ...prev, flashcards: flashcardsRes.value.data.pagination?.total || 0 }));
+        
+        if (!isStaff) {
+          try {
+            const { data } = await api.get('/courses/free/content');
+            if (data.success) {
+              setFreeOpenCourses(data.courses);
+            }
+          } catch(e) {}
+        }
       } catch (err) {
         console.error(err);
       } finally {
@@ -258,6 +276,65 @@ export default function Dashboard() {
           )}
         </div>
       </div>
+
+      {/* Free & Open Courses directly on dashboard */}
+      {!loading && !isStaff && freeOpenCourses.length > 0 && (
+        <div className="mt-8 space-y-8">
+          <div className="flex items-center gap-2 mb-4">
+            <Zap className="w-6 h-6 text-yellow-400" />
+            <h2 className="text-2xl font-bold text-white">Free Learning Material</h2>
+          </div>
+          {freeOpenCourses.map(course => (
+            <div key={course.id} className="glass-card p-6 border-l-4 border-yellow-500">
+              <div className="flex items-center gap-4 mb-6">
+                {course.thumbnailUrl && <img src={course.thumbnailUrl} alt={course.title} className="w-16 h-16 rounded-xl object-cover shadow-lg" />}
+                <div>
+                  <h3 className="text-xl font-bold text-white">{course.title}</h3>
+                  <p className="text-sm text-gray-400 mt-1">{course.description}</p>
+                </div>
+                <Link to={`/courses/${course.id}/learn`} className="ml-auto btn-primary whitespace-nowrap">
+                  Open Player
+                </Link>
+              </div>
+
+              <div className="space-y-4">
+                {course.modules?.map((module, mIdx) => (
+                  <div key={module.id} className="bg-white/5 rounded-xl p-4 border border-white/5">
+                    <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-xs text-gray-400">{mIdx + 1}</div>
+                      {module.title}
+                    </h4>
+                    <div className="space-y-2 pl-2">
+                      {module.items?.map((item, iIdx) => (
+                        <div key={item.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors group">
+                          {item.itemType === 'video' && <Video className="w-4 h-4 text-red-400" />}
+                          {item.itemType === 'note' && <BookOpen className="w-4 h-4 text-blue-400" />}
+                          {item.itemType === 'quiz' && <Brain className="w-4 h-4 text-purple-400" />}
+                          {item.itemType === 'flashcard' && <Layers className="w-4 h-4 text-green-400" />}
+                          
+                          <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
+                            {item.details?.title || `Untitled ${item.itemType}`}
+                          </span>
+                          
+                          <Link to={`/courses/${course.id}/learn?item=${item.id}`} className="ml-auto text-xs text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                            View &rarr;
+                          </Link>
+                        </div>
+                      ))}
+                      {module.items?.length === 0 && (
+                        <p className="text-xs text-gray-500 pl-8">No content in this module yet.</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {(!course.modules || course.modules.length === 0) && (
+                  <p className="text-sm text-gray-500">Course content is being prepared.</p>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

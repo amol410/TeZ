@@ -11,7 +11,7 @@ export default function CourseBuilderPage() {
 
   const [loading, setLoading] = useState(isEditing);
   const [saving, setSaving] = useState(false);
-  const [course, setCourse] = useState({ title: '', description: '', price: 0, thumbnailUrl: '', isPublished: false });
+  const [course, setCourse] = useState({ title: '', description: '', price: 0, thumbnailUrl: '', isPublished: false, accessType: 'paid' });
   const [modules, setModules] = useState([]);
   
   // Resources for dropdowns
@@ -183,10 +183,27 @@ export default function CourseBuilderPage() {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">Price ($)</label>
-            <input required type="number" step="0.01" min="0" value={course.price} onChange={e => setCourse({...course, price: e.target.value})} className="input-field" />
+            <label className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">Access Type</label>
+            <select required value={course.accessType} onChange={e => setCourse({...course, accessType: e.target.value})} className="input-field">
+              <option value="paid">Paid</option>
+              <option value="free-checkout">Free (Requires Checkout)</option>
+              <option value="free-open">Free & Open (No Checkout)</option>
+            </select>
           </div>
           <div>
+            <label className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">Price ($)</label>
+            <input 
+              required 
+              type="number" 
+              step="0.01" 
+              min="0" 
+              value={course.price} 
+              onChange={e => setCourse({...course, price: e.target.value})} 
+              className="input-field disabled:opacity-50" 
+              disabled={course.accessType !== 'paid'}
+            />
+          </div>
+          <div className="col-span-2">
             <label className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">Thumbnail URL</label>
             <input type="url" value={course.thumbnailUrl} onChange={e => setCourse({...course, thumbnailUrl: e.target.value})} className="input-field" placeholder="https://..." />
           </div>
