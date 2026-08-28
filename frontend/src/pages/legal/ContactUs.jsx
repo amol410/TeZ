@@ -18,9 +18,9 @@ export default function ContactUs() {
               <Mail className="w-6 h-6 text-indigo-400" />
             </div>
             <h3 className="text-white font-semibold mb-2">Email Support</h3>
-            <a href="mailto:support@tezsend.com" className="text-indigo-400 hover:text-indigo-300 transition-colors">
+            <span className="text-indigo-400">
               support@tezsend.com
-            </a>
+            </span>
           </div>
 
           <div className="bg-black/20 border border-white/5 p-6 rounded-2xl flex flex-col items-center">

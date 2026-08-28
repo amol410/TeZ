@@ -27,7 +27,7 @@ export default function Footer() {
             <h4 className="text-white font-semibold mb-4">Support</h4>
             <ul className="space-y-2 text-sm text-gray-400">
               <li><Link to="/contact" className="hover:text-indigo-400 transition-colors">Contact Us</Link></li>
-              <li><a href="mailto:support@tezsend.com" className="hover:text-indigo-400 transition-colors">support@tezsend.com</a></li>
+              <li><span className="text-gray-400">support@tezsend.com</span></li>
             </ul>
           </div>
         </div>

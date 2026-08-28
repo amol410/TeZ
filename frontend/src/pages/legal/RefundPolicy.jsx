@@ -24,7 +24,7 @@ export default function RefundPolicy() {
 
           <section>
             <h2 className="text-xl font-bold text-white mb-3">Cancellation Process</h2>
-            <p>If you believe you are eligible for a refund based on the criteria above, please reach out to us at <a href="mailto:support@tezsend.com" className="text-indigo-400 hover:underline">support@tezsend.com</a> with your transaction ID and registered email address. Our support team will review your request within 5-7 business days.</p>
+            <p>If you believe you are eligible for a refund based on the criteria above, please reach out to us at <span className="text-indigo-400 font-medium">support@tezsend.com</span> with your transaction ID and registered email address. Our support team will review your request within 5-7 business days.</p>
           </section>
 
           <p className="text-sm text-gray-500 pt-8 border-t border-white/10">Last updated: August 2026</p>
