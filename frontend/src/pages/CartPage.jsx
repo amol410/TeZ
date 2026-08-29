@@ -4,14 +4,20 @@ import { useCart } from '../contexts/CartContext';
 import api from '../api/axios';
 import { ShoppingCart, Trash2, ArrowRight, BookOpen } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function CartPage() {
   const { cart, cartTotal, removeFromCart, clearCart } = useCart();
+  const { user } = useAuth();
   const [checkingOut, setCheckingOut] = useState(false);
   const navigate = useNavigate();
 
   const handleCheckout = async () => {
     if (cart.length === 0) return;
+    if (user?.kycStatus !== 'APPROVED') {
+      toast.error('KYC not approved. Please complete KYC on the mobile app before checking out.');
+      return;
+    }
     setCheckingOut(true);
     
     try {

@@ -1,7 +1,7 @@
 const { Router } = require('express');
 const { randomUUID } = require('crypto');
 const { authenticate } = require('../middleware/auth');
-const db = require('../db');
+const db = require('../paymentDb');
 
 const router = Router();
 router.use(authenticate);

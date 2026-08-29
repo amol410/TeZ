@@ -3,7 +3,6 @@ import '../theme/app_theme.dart';
 import 'dashboard_screen.dart';
 
 import 'transactions_screen.dart';
-import 'cards_screen.dart';
 import 'profile_screen.dart';
 
 class MainNavigation extends StatefulWidget {
@@ -19,7 +18,6 @@ class _MainNavigationState extends State<MainNavigation> {
   final List<Widget> _screens = [
     const DashboardScreen(),
     const TransactionsScreen(),
-    const CardsScreen(),
     const ProfileScreen(),
   ];
 
@@ -41,7 +39,6 @@ class _MainNavigationState extends State<MainNavigation> {
           items: const [
             BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home), label: 'Home'),
             BottomNavigationBarItem(icon: Icon(Icons.receipt_long_outlined), activeIcon: Icon(Icons.receipt_long), label: 'Activity'),
-            BottomNavigationBarItem(icon: Icon(Icons.credit_card_outlined), activeIcon: Icon(Icons.credit_card), label: 'Cards'),
             BottomNavigationBarItem(icon: Icon(Icons.person_outline), activeIcon: Icon(Icons.person), label: 'Profile'),
           ],
         ),

@@ -33,7 +33,7 @@ class _TezSendAppState extends State<TezSendApp> {
 
     // Check initial link if app was cold-started
     try {
-      final initialLink = await _appLinks.getInitialAppLink();
+      final initialLink = await _appLinks.getInitialLink();
       if (initialLink != null) {
         _handleDeepLink(initialLink);
       }
@@ -60,7 +60,7 @@ class _TezSendAppState extends State<TezSendApp> {
       if (txId != null) {
         navigatorKey.currentState?.push(
           MaterialPageRoute(
-            builder: (context) => TransferStatusScreen(transactionId: txId),
+            builder: (context) => TransferStatusScreen(transactionId: txId!),
           ),
         );
       }

@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import '../services/user_session.dart';
 import '../models/transaction_model.dart';
 import 'send_money_screen.dart';
+import 'kyc_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -50,31 +51,59 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  Widget _buildQuickAction(IconData icon, String label, {VoidCallback? onTap}) {
+  Widget _buildFeatureCard({
+    required BuildContext context,
+    required String title,
+    required String emoji,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    final height = MediaQuery.of(context).size.height * 0.25;
+    
     return GestureDetector(
       onTap: onTap,
-      child: Column(
-        children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: AppTheme.bgElevated,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+      child: Container(
+        width: double.infinity,
+        height: height,
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 2),
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              right: -20,
+              bottom: -20,
+              child: Text(
+                emoji,
+                style: TextStyle(
+                  fontSize: height * 0.6,
+                  color: Colors.white.withValues(alpha: 0.1),
+                ),
+              ),
             ),
-            child: Icon(icon, color: AppTheme.textPrimary),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            style: const TextStyle(
-              color: AppTheme.textSecondary,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(emoji, style: const TextStyle(fontSize: 36)),
+                  const Spacer(),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -172,6 +201,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return '${dt.day}/${dt.month}/${dt.year}';
   }
 
+  void _handlePaymentTap(BuildContext context, user) {
+    if (user?.kycStatus != 'APPROVED') {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: AppTheme.bgElevated,
+          title: const Text('KYC Required', style: TextStyle(color: AppTheme.textPrimary)),
+          content: const Text('You must complete your KYC (Aadhar & PAN) before you can initiate payments.', style: TextStyle(color: AppTheme.textSecondary)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('OK', style: TextStyle(color: AppTheme.brand)),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const SendMoneyScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = UserSession.instance.currentUser;
@@ -238,49 +291,108 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 const SizedBox(height: 32),
 
-                // Balance Card
-                GlassCard(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                // Balance & KYC Cards
+                IntrinsicHeight(
+                  child: Row(
                     children: [
-                      const Text('Total Volume Sent',
-                          style: TextStyle(
-                              color: AppTheme.textSecondary, fontSize: 14)),
-                      const SizedBox(height: 8),
-                      _isLoading
-                          ? const _ShimmerBox(width: 160, height: 38)
-                          : Text(
-                              '₹${_totalVolume.toStringAsFixed(2)}',
-                              style: const TextStyle(
-                                color: AppTheme.textPrimary,
-                                fontSize: 32,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                      const SizedBox(height: 24),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _buildQuickAction(
-                            Icons.send_rounded,
-                            'Send',
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => const SendMoneyScreen()),
-                            ),
+                      Expanded(
+                        child: GlassCard(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Total Volume Sent',
+                                  style: TextStyle(
+                                      color: AppTheme.textSecondary, fontSize: 12)),
+                              const SizedBox(height: 8),
+                              _isLoading
+                                  ? const _ShimmerBox(width: double.infinity, height: 32)
+                                  : FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      alignment: Alignment.centerLeft,
+                                      child: Text(
+                                        '₹${_totalVolume.toStringAsFixed(2)}',
+                                        style: const TextStyle(
+                                          color: AppTheme.textPrimary,
+                                          fontSize: 28,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                    ),
+                            ],
                           ),
-                          _buildQuickAction(
-                              Icons.call_received_rounded, 'Request'),
-                          _buildQuickAction(Icons.add_rounded, 'Top Up'),
-                          _buildQuickAction(Icons.more_horiz_rounded, 'More'),
-                        ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: GlassCard(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                user?.kycStatus == 'APPROVED' ? 'KYC Approved' :
+                                user?.kycStatus == 'PENDING' ? 'KYC Pending' : 'Complete your KYC',
+                                style: const TextStyle(
+                                    color: AppTheme.brand, fontSize: 12, fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 8),
+                              const Text('Aadhar & PAN',
+                                  style: TextStyle(
+                                      color: AppTheme.textPrimary,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 4),
+                              if (user?.kycStatus != 'APPROVED' && user?.kycStatus != 'PENDING')
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (_) => const KYCScreen()),
+                                    ).then((_) {
+                                      // Reload dashboard when returning from KYC to get updated status
+                                      _loadData();
+                                    });
+                                  },
+                                  style: TextButton.styleFrom(
+                                    padding: EdgeInsets.zero,
+                                    minimumSize: Size.zero,
+                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                    alignment: Alignment.centerLeft,
+                                  ),
+                                  child: const Text('Submit Now >', style: TextStyle(color: AppTheme.brand, fontSize: 12)),
+                                ),
+                            ],
+                          ),
+                        ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildFeatureCard(
+                        context: context,
+                        title: 'Pay Education\nFees',
+                        emoji: '🎓',
+                        color: AppTheme.brand,
+                        onTap: () => _handlePaymentTap(context, user),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildFeatureCard(
+                        context: context,
+                        title: 'Pay Your\nRent',
+                        emoji: '🏠',
+                        color: AppTheme.purple,
+                        onTap: () => _handlePaymentTap(context, user),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
 
                 // Error state
                 if (_error != null)

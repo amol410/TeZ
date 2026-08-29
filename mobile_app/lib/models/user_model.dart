@@ -5,6 +5,9 @@ class User {
   final String name;
   final String? googleId;
   final String? avatar;
+  final String kycStatus;
+  final String? aadharUrl;
+  final String? panUrl;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -15,6 +18,9 @@ class User {
     required this.name,
     this.googleId,
     this.avatar,
+    this.kycStatus = 'UNSUBMITTED',
+    this.aadharUrl,
+    this.panUrl,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -27,6 +33,9 @@ class User {
       name: json['name'] as String,
       googleId: json['googleId'] as String?,
       avatar: json['avatar'] as String?,
+      kycStatus: json['kycStatus'] as String? ?? 'UNSUBMITTED',
+      aadharUrl: json['aadharUrl'] as String?,
+      panUrl: json['panUrl'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
     );

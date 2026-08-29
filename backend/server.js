@@ -25,6 +25,7 @@ const defaultAllowed = [
   'https://tezsend.com',
   'https://www.tezsend.com',
   'http://localhost:5173',
+  'http://localhost:5174',
   'http://localhost:3000'
 ];
 
@@ -56,6 +57,9 @@ app.use(
 );
 
 app.use(express.json());
+
+// ─── Static Files ─────────────────────────────────────────────────────────────
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 // ─── TezSend (Payment) Routes ────────────────────────────────────────────────

@@ -1,7 +1,7 @@
 const { Router } = require('express');
 const { randomUUID, randomBytes } = require('crypto');
 const { authenticate } = require('../middleware/auth');
-const db = require('../db');
+const db = require('../paymentDb');
 
 const router = Router();
 const CONVENIENCE_FEE_RATE = 0.02;
@@ -22,6 +22,15 @@ router.post('/initiate', async (req, res) => {
   const { beneficiaryId, amount } = req.body;
   if (!beneficiaryId || !amount) {
     return res.status(400).json({ message: 'Missing required fields' });
+  }
+
+  try {
+    const [userRows] = await db.query('SELECT kycStatus FROM User WHERE id = ?', [req.userId]);
+    if (userRows.length === 0 || userRows[0].kycStatus !== 'APPROVED') {
+      return res.status(403).json({ message: 'KYC not approved. Please complete KYC to initiate transactions.' });
+    }
+  } catch (error) {
+    return res.status(500).json({ message: 'Error checking KYC status', error: error.message });
   }
 
   const convenienceFee = amount * CONVENIENCE_FEE_RATE;

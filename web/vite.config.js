@@ -11,14 +11,8 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: 'https://speedupexam.com',
+        target: 'http://localhost:3000',
         changeOrigin: true,
-        secure: false,
-        configure: (proxy) => {
-          proxy.on('proxyReq', (proxyReq) => {
-            proxyReq.removeHeader('origin');
-          });
-        }
       }
     }
   }

@@ -1,5 +1,6 @@
 const { Router } = require('express');
-const db = require('../../db');
+const db = require('../../db');           // LMS database
+const paymentDb = require('../../paymentDb'); // Payment database (User, KYC)
 const { protect, authorize } = require('../../middleware/lmsAuth');
 
 const router = Router();
@@ -68,6 +69,35 @@ router.put('/users/:id/toggle-active', async (req, res) => {
     );
     res.json({ success: true, user: { ...updated[0], isActive: !!updated[0].isActive } });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+});
+
+// ─── GET /api/admin/kyc-requests ──────────────────────────────────────────────
+router.get('/kyc-requests', async (req, res) => {
+  try {
+    const [rows] = await paymentDb.query(
+      `SELECT id, name, email, phone, kycStatus, aadharUrl, panUrl, createdAt, updatedAt 
+       FROM User 
+       WHERE kycStatus = 'PENDING'
+       ORDER BY updatedAt DESC`
+    );
+    res.json({ success: true, requests: rows });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ─── POST /api/admin/kyc-approve ─────────────────────────────────────────────
+router.post('/kyc-approve', async (req, res) => {
+  try {
+    const { userId, status } = req.body;
+    if (!['APPROVED', 'REJECTED'].includes(status)) {
+      return res.status(400).json({ success: false, message: 'Invalid status' });
+    }
+    await paymentDb.query('UPDATE User SET kycStatus = ?, updatedAt = NOW() WHERE id = ?', [status, userId]);
+    res.json({ success: true, message: `KYC ${status}` });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
 // ─── GET /api/admin/stats ────────────────────────────────────────────────────

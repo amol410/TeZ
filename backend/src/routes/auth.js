@@ -3,7 +3,7 @@ const { randomUUID } = require('crypto');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
-const db = require('../db');
+const db = require('../paymentDb');
 const { authenticate } = require('../middleware/auth');
 const { firebaseApp } = require('../firebaseAdmin');
 const { getAuth } = require('firebase-admin/auth');
@@ -13,7 +13,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key';
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID';
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
-const SAFE_FIELDS = 'id, phone, email, name, googleId, avatar, lmsRole AS role, lmsIsActive AS isActive, createdAt, updatedAt';
+const SAFE_FIELDS = 'id, phone, email, name, googleId, avatar, lmsRole AS role, lmsIsActive AS isActive, kycStatus, aadharUrl, panUrl, createdAt, updatedAt';
 
 const signToken = (userId) => jwt.sign({ userId }, JWT_SECRET, { expiresIn: '7d' });
 
@@ -298,3 +298,43 @@ router.post('/link-phone', authenticate, async (req, res) => {
 });
 
 module.exports = router;
+
+// ─── KYC Submission ───────────────────────────────────────────────────────────
+const multer = require('multer');
+const path = require('path');
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, '../../../public/uploads'));
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+});
+
+router.post('/kyc', authenticate, upload.fields([{ name: 'aadhar', maxCount: 1 }, { name: 'pan', maxCount: 1 }]), async (req, res) => {
+  if (!req.files || !req.files['aadhar'] || !req.files['pan']) {
+    return res.status(400).json({ message: 'Both Aadhar and PAN images are required' });
+  }
+
+  const aadharUrl = `/uploads/${req.files['aadhar'][0].filename}`;
+  const panUrl = `/uploads/${req.files['pan'][0].filename}`;
+
+  try {
+    await db.query(
+      'UPDATE User SET kycStatus = ?, aadharUrl = ?, panUrl = ?, updatedAt = ? WHERE id = ?',
+      ['PENDING', aadharUrl, panUrl, new Date(), req.userId]
+    );
+
+    const [safeRows] = await db.query(`SELECT ${SAFE_FIELDS} FROM User WHERE id = ?`, [req.userId]);
+    res.json({ message: 'KYC submitted successfully', user: safeRows[0] });
+  } catch (error) {
+    res.status(500).json({ message: 'Error submitting KYC', error: error.message });
+  }
+});

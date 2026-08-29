@@ -11,6 +11,8 @@ export default function AdminPage() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [kycRequests, setKycRequests] = useState([]);
+  const [loadingKyc, setLoadingKyc] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [creating, setCreating] = useState(false);
@@ -43,7 +45,22 @@ export default function AdminPage() {
     }
   };
 
-  useEffect(() => { fetchUsers(1); }, []);
+  const fetchKycRequests = async () => {
+    setLoadingKyc(true);
+    try {
+      const { data } = await api.get('/admin/kyc-requests');
+      setKycRequests(data.requests);
+    } catch {
+      toast.error('Failed to load KYC requests');
+    } finally {
+      setLoadingKyc(false);
+    }
+  };
+
+  useEffect(() => { 
+    fetchUsers(1); 
+    fetchKycRequests();
+  }, []);
 
   const handleCreateTrainer = async (e) => {
     e.preventDefault();
@@ -68,6 +85,16 @@ export default function AdminPage() {
       toast.success(data.user.isActive ? 'User activated' : 'User deactivated');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to update user');
+    }
+  };
+
+  const handleApproveKyc = async (userId, status) => {
+    try {
+      await api.post('/admin/kyc-approve', { userId, status });
+      setKycRequests(prev => prev.filter(u => u.id !== userId));
+      toast.success(`KYC ${status}`);
+    } catch (err) {
+      toast.error(err.response?.data?.message || `Failed to ${status} KYC`);
     }
   };
 
@@ -207,6 +234,7 @@ export default function AdminPage() {
           { key: 'trainers', label: `Trainers (${trainers.length})` },
           { key: 'students', label: `Students (${students.length})` },
           { key: 'subjects', label: `Subjects (${subjects.length})` },
+          { key: 'kyc', label: `KYC Approvals (${kycRequests.length})` },
         ].map(t => (
           <button
             key={t.key}
@@ -221,7 +249,7 @@ export default function AdminPage() {
       </div>
 
       {/* Users Table */}
-      {tab !== 'subjects' && (
+      {(tab === 'users' || tab === 'trainers' || tab === 'students') && (
         loading ? (
           <div className="glass-card p-8 text-center text-gray-500">Loading users...</div>
         ) : (
@@ -291,17 +319,81 @@ export default function AdminPage() {
                 )}
               </tbody>
             </table>
-            {hasMore && (
-              <div className="p-4 border-t border-white/10 flex justify-center">
-                <button 
-                  onClick={() => fetchUsers(page + 1)} 
-                  disabled={loadingMore}
-                  className="px-6 py-2 rounded-xl text-sm font-medium transition-all bg-white/5 hover:bg-white/10 text-white border border-white/10"
-                >
-                  {loadingMore ? 'Loading...' : 'Load More'}
-                </button>
-              </div>
-            )}
+            <div className="p-4 border-t border-white/10 flex justify-center">
+              <button
+                onClick={() => {
+                  if (!hasMore || loadingMore) return;
+                  fetchUsers(page + 1);
+                }}
+                disabled={loadingMore || !hasMore}
+                className="w-full py-4 text-sm font-medium text-gray-400 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loadingMore ? 'Loading more...' : hasMore ? 'Load More Users' : 'No more users'}
+              </button>
+            </div>
+          </div>
+        )
+      )}
+
+      {/* KYC Table */}
+      {tab === 'kyc' && (
+        loadingKyc ? (
+          <div className="glass-card p-8 text-center text-gray-500">Loading KYC requests...</div>
+        ) : kycRequests.length === 0 ? (
+          <div className="glass-card p-8 text-center text-gray-500">No pending KYC requests</div>
+        ) : (
+          <div className="glass-card overflow-hidden">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-white/10">
+                  <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase">User</th>
+                  <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase">Aadhar</th>
+                  <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase">PAN</th>
+                  <th className="text-right px-5 py-3 text-xs font-medium text-gray-500 uppercase">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {kycRequests.map(r => (
+                  <tr key={r.id} className="hover:bg-white/3 transition-colors">
+                    <td className="px-5 py-4">
+                      <div>
+                        <p className="text-white text-sm font-medium">{r.name}</p>
+                        <p className="text-gray-500 text-xs">{r.email}</p>
+                        <p className="text-gray-500 text-xs">{r.phone}</p>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4">
+                      {r.aadharUrl ? (
+                        <a href={`http://localhost:3000${r.aadharUrl}`} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline text-sm flex items-center gap-1">
+                          <BookOpen className="w-4 h-4"/> View Aadhar
+                        </a>
+                      ) : (
+                        <span className="text-gray-500 text-sm">No file</span>
+                      )}
+                    </td>
+                    <td className="px-5 py-4">
+                      {r.panUrl ? (
+                        <a href={`http://localhost:3000${r.panUrl}`} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline text-sm flex items-center gap-1">
+                          <BookOpen className="w-4 h-4"/> View PAN
+                        </a>
+                      ) : (
+                        <span className="text-gray-500 text-sm">No file</span>
+                      )}
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button onClick={() => handleApproveKyc(r.id, 'APPROVED')} className="p-2 text-green-400 hover:bg-green-500/10 rounded-lg transition-colors" title="Approve">
+                          <UserCheck className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => handleApproveKyc(r.id, 'REJECTED')} className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors" title="Reject">
+                          <UserX className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )
       )}

@@ -93,6 +93,32 @@ class ApiService {
         jsonDecode(response.body) as Map<String, dynamic>);
   }
 
+  // ─── KYC ─────────────────────────────────────────────────────────────────────
+
+  /// POST /auth/kyc → { message, user }
+  static Future<User> submitKYC(String aadharPath, String panPath) async {
+    final url = Uri.parse('$baseUrl/auth/kyc');
+    final request = http.MultipartRequest('POST', url);
+    
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    if (token != null) {
+      request.headers['Authorization'] = 'Bearer $token';
+    }
+
+    request.files.add(await http.MultipartFile.fromPath('aadhar', aadharPath));
+    request.files.add(await http.MultipartFile.fromPath('pan', panPath));
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    
+    if (response.statusCode != 200) {
+      throw Exception(body['message'] ?? 'KYC submission failed');
+    }
+    return User.fromJson(body['user'] as Map<String, dynamic>);
+  }
+
   // ─── Transactions ─────────────────────────────────────────────────────────────
 
   /// GET /transactions/history → List<AppTransaction>

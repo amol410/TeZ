@@ -40,7 +40,7 @@ class _TransferStatusScreenState extends State<TransferStatusScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: AppTheme.bgBase,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -53,7 +53,7 @@ class _TransferStatusScreenState extends State<TransferStatusScreen> {
               ? Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const CircularProgressIndicator(color: AppTheme.primary),
+                    const CircularProgressIndicator(color: AppTheme.brand),
                     const SizedBox(height: 24),
                     Text(
                       _message,
@@ -90,7 +90,7 @@ class _TransferStatusScreenState extends State<TransferStatusScreen> {
                       ),
                     ),
                     const SizedBox(height: 48),
-                    PrimaryButton(
+                    GradientButton(
                       text: 'Back to Home',
                       onPressed: () {
                         // Pop back to root (Dashboard)
