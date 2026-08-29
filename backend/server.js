@@ -56,6 +56,13 @@ app.use(
   })
 );
 
+// Allow Google Sign-In popup to communicate back (COOP fix)
+app.use((req, res, next) => {
+  res.setHeader('Cross-Origin-Opener-Policy', 'unsafe-none');
+  res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
+  next();
+});
+
 app.use(express.json());
 
 // ─── Static Files ─────────────────────────────────────────────────────────────
