@@ -134,16 +134,34 @@ function serveApp(indexPath, req, res, next) {
   });
 }
 
+// ─── Static file serving for /transferred (TezSend Payment App) ──────────────
+// Must come BEFORE the catch-all so JS/CSS/assets resolve correctly
+if (tezIndexPath) {
+  const tezDistDir = path.dirname(tezIndexPath);
+  app.use('/transferred', express.static(tezDistDir));
+}
+
+// ─── Static file serving for LMS app (root) ──────────────────────────────────
+if (lmsIndexPath) {
+  const lmsDistDir = path.dirname(lmsIndexPath);
+  app.use('/', express.static(lmsDistDir));
+}
+
+// ─── SPA fallback (HTML5 routing) ────────────────────────────────────────────
 app.use((req, res, next) => {
   if (req.path.startsWith('/api')) return next();
 
-  // /transferred/* → TezSend payment app
+  // /transferred/* → serve TezSend payment app index.html
   if (req.path.startsWith('/transferred')) {
-    return serveApp(tezIndexPath, req, res, next);
+    if (!tezIndexPath) return res.status(404).send('Payment app not built. Run npm run build in web/');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    return res.sendFile(tezIndexPath);
   }
 
-  // everything else → LMS app
-  return serveApp(lmsIndexPath, req, res, next);
+  // everything else → serve LMS app index.html
+  if (!lmsIndexPath) return res.status(404).send('LMS app not built. Run npm run build in frontend/');
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  return res.sendFile(lmsIndexPath);
 });
 
 // ─── Global error handler ─────────────────────────────────────────────────────
