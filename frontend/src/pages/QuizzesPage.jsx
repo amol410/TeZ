@@ -34,7 +34,7 @@ export default function QuizzesPage() {
       const { data } = await api.get('/quizzes', { params });
       setQuizzes(data.quizzes);
     } catch {
-      toast.error('Failed to load quizzes');
+      setQuizzes([]);
     } finally {
       setLoading(false);
     }

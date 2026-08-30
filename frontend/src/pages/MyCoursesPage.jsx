@@ -19,8 +19,8 @@ export default function MyCoursesPage() {
       if (data.success) {
         setCourses(data.courses);
       }
-    } catch (err) {
-      toast.error('Failed to load your courses');
+    } catch {
+      setCourses([]);
     } finally {
       setLoading(false);
     }

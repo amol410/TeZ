@@ -39,7 +39,7 @@ export default function FlashcardsPage() {
       const { data } = await api.get('/flashcards', { params });
       setDecks(data.decks);
     } catch {
-      toast.error('Failed to load decks');
+      setDecks([]);
     } finally {
       setLoading(false);
     }

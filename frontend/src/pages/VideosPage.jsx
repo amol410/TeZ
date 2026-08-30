@@ -31,7 +31,7 @@ export default function VideosPage() {
       setVideos(data.videos);
       setPagination(data.pagination);
     } catch {
-      toast.error('Failed to load videos');
+      setVideos([]);
     } finally {
       setLoading(false);
     }

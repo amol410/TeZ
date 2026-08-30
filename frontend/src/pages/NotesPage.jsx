@@ -61,7 +61,7 @@ export default function NotesPage() {
       const tags = [...new Set(data.notes.flatMap(n => n.tags))].filter(Boolean);
       setAllTags(tags);
     } catch {
-      toast.error('Failed to load notes');
+      setNotes([]);
     } finally {
       setLoading(false);
     }
