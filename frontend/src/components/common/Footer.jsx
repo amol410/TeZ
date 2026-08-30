@@ -28,13 +28,14 @@ export default function Footer() {
             <ul className="space-y-2 text-sm text-gray-400">
               <li><Link to="/contact" className="hover:text-indigo-400 transition-colors">Contact Us</Link></li>
               <li><span className="text-gray-400">support@tezsend.com</span></li>
+              <li><span className="text-gray-400">7020914188</span></li>
             </ul>
           </div>
         </div>
 
         <div className="pt-8 border-t border-white/5 text-center text-sm text-gray-500">
           &copy; {new Date().getFullYear()} TezSend LMS. All rights reserved.<br />
-          Gulmohar Park, Wagholi, Pune, Maharashtra
+          103, 1st floor before Gulmohar Park, Wagholi, Pune, Maharashtra
         </div>
       </div>
     </footer>

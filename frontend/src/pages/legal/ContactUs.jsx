@@ -17,9 +17,12 @@ export default function ContactUs() {
             <div className="w-12 h-12 rounded-full bg-indigo-500/20 flex items-center justify-center mb-4">
               <Mail className="w-6 h-6 text-indigo-400" />
             </div>
-            <h3 className="text-white font-semibold mb-2">Email Support</h3>
-            <span className="text-indigo-400">
+            <h3 className="text-white font-semibold mb-2">Email & Phone</h3>
+            <span className="text-indigo-400 mb-1">
               support@tezsend.com
+            </span>
+            <span className="text-indigo-400">
+              7020914188
             </span>
           </div>
 
@@ -29,6 +32,7 @@ export default function ContactUs() {
             </div>
             <h3 className="text-white font-semibold mb-2">Our Office</h3>
             <p className="text-gray-400 text-sm text-center">
+              103, 1st floor before<br />
               Gulmohar Park<br />
               Wagholi, Pune<br />
               Maharashtra, India
