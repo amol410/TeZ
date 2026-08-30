@@ -14,10 +14,7 @@ export default function CartPage() {
 
   const handleCheckout = async () => {
     if (cart.length === 0) return;
-    if (user?.kycStatus !== 'APPROVED') {
-      toast.error('KYC not approved. Please complete KYC on the mobile app before checking out.');
-      return;
-    }
+
     setCheckingOut(true);
     
     try {
