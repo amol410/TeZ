@@ -32,7 +32,7 @@ export default function ContactUs() {
             </div>
             <h3 className="text-white font-semibold mb-2">Our Office</h3>
             <p className="text-gray-400 text-sm text-center">
-              103, 1st floor before<br />
+              103, 1st floor<br />
               Gulmohar Park<br />
               Wagholi, Pune<br />
               Maharashtra, India

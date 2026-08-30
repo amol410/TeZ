@@ -35,7 +35,7 @@ export default function Footer() {
 
         <div className="pt-8 border-t border-white/5 text-center text-sm text-gray-500">
           &copy; {new Date().getFullYear()} TezSend LMS. All rights reserved.<br />
-          103, 1st floor before Gulmohar Park, Wagholi, Pune, Maharashtra
+          103, 1st floor, Gulmohar Park, Wagholi, Pune, Maharashtra
         </div>
       </div>
     </footer>
